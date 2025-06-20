@@ -1,0 +1,36 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  FRONTEND_DIR: va_whack.web
+  BACKEND_DIR: va_whack.api
+
+before_script:
+  - apk add --no-cache openssh-client rsync
+
+build-react:
+  stage: build
+  image: node:20
+  script:
+    - cd $FRONTEND_DIR
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - $FRONTEND_DIR/dist
+
+deploy-to-ec2:
+  stage: deploy
+  script:
+    - mkdir -p ~/.ssh
+    - echo "$EC2_DEPLOY_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+    - echo "$EC2_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+    # Push backend and frontend
+    - rsync -avz $BACKEND_DIR/ $EC2_USER@$EC2_HOST:/C/whack/backend/
+    - rsync -avz $FRONTEND_DIR/dist/ $EC2_USER@$EC2_HOST:/C/whack/frontend/
+
+    # Remotely restart FastAPI server (must have a .ps1 script ready)
+    - ssh $EC2_USER@$EC2_HOST "powershell -ExecutionPolicy Bypass -File C:\whack\deploy\restart-backend.ps1"
