@@ -9,7 +9,7 @@ export interface IMole {
 	mole_type: 'mole' | 'fake-mole';
 }
 
-export interface IGameConfig {
+export interface IEnagementGameConfig {
 	mouseSize: number;
 	holeSize: number;
 	holeGap: number;
@@ -19,10 +19,10 @@ export interface IGameConfig {
 	bgColor: string;
 }
 
-export interface IGameSession {
+export interface IEnagementGameSession {
 	gameId: string;
 	user: IUserDetails;
-	config: IGameConfig;
+	config: IEnagementGameConfig;
 	events: IAppearanceEvent[];
 	startTime: number; // optional: for session tracking
 	endTime?: number;
@@ -48,7 +48,7 @@ export interface IAppearanceEvent {
 }
 
 // End-of-session summary interface
-export interface IScoreSummary {
+export interface IEnagementScoreSummary {
 	SS1_detectionSpeed?: number; // in ms
 	SS2_detectionAccuracy?: number; // in px
 	SS3_spatialUniformity?: number; // 0–100
@@ -67,4 +67,24 @@ export interface IScoreSummary {
 	totalTrials: number;
 	totalMoleTrials: number;
 	totalRabbitTrials: number;
+}
+
+export interface IVAGameSession {
+	gameId: string;
+	user: IUserDetails;
+	config: IEnagementGameConfig;
+	events: IAppearanceEvent[];
+	startTime: number; // optional: for session tracking
+	endTime?: number;
+}
+
+export interface IVAGameConfig {
+	holeSize: number;
+	holeGap: number;
+	outerColor: string;
+	innerColor: string;
+	bgColor: string;
+	ratio: number;
+	moveDirection?: 'left-to-right' | 'right-to-left';
+	moveSpeed?: number; // pixels per second
 }

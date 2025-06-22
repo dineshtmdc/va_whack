@@ -8,7 +8,7 @@ interface MoleProps {
 	onClick: (e: React.MouseEvent) => void;
 }
 
-export const Mole = ({ id, size, onClick }: MoleProps) => {
+export const Mole = ({ size, onClick }: MoleProps) => {
 	return (
 		<span style={{ fontSize: `${size}px` }} className='animate-bounce cursor-pointer' onClick={onClick}>
 			🐭
