@@ -2,7 +2,7 @@
 
 import { Dialog, DialogTitle } from '@headlessui/react';
 import { useState } from 'react';
-import { useGameSessionStore } from '../shared'; // Adjust path if needed
+import { useEnagementGameSessionStore } from '../shared'; // Adjust path if needed
 
 interface GameSessionInfoProps {
 	isOpen: boolean;
@@ -18,7 +18,7 @@ const formatTimeWithMs = (timestamp: number) => {
 
 export const GameSessionInfo = ({ isOpen, onClose }: GameSessionInfoProps) => {
 	const [selectedTab, setSelectedTab] = useState(0);
-	const sessionHistory = useGameSessionStore((state) => state.sessionHistory);
+	const sessionHistory = useEnagementGameSessionStore((state) => state.sessionHistory);
 
 	return (
 		<Dialog open={isOpen} onClose={onClose} className='relative z-50'>

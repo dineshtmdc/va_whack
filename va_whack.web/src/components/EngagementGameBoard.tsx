@@ -3,16 +3,16 @@
 import { useEffect, useRef, useState } from 'react';
 import hammerCursor from '../assets/hammer.jpg';
 import { Dialog } from '@headlessui/react';
-import { useGameSessionStore, type IAppearanceEvent, type IMole, type IUserDetails, type IGameConfig } from '../shared';
+import { useEnagementGameSessionStore, type IAppearanceEvent, type IMole, type IUserDetails, type IEnagementGameConfig } from '../shared';
 import { Mole, GameSessionInfo } from '.';
 import { FakeMole } from './FakeMole';
 
-interface Props {
-	config: IGameConfig;
+interface EngagementGameBoardProps {
+	config: IEnagementGameConfig;
 	user: IUserDetails;
 }
 
-export const GameBoard = ({ config, user }: Props) => {
+export const EngagementGameBoard = ({ config, user }: EngagementGameBoardProps) => {
 	const [mice, setMice] = useState<IMole[]>([]);
 	const [prevMouseIds, setPrevMouseIds] = useState<number[]>([]);
 	const [rows, setRows] = useState(0);
@@ -25,7 +25,7 @@ export const GameBoard = ({ config, user }: Props) => {
 	const [showSummaryDialog, setShowSummaryDialog] = useState(false);
 	const [showStatsDialog, setShowStatsDialog] = useState(false);
 	const nextEventIdRef = useRef(1);
-	const { startSession, addEvents, updateEventById, endSession, resetCurrentSession } = useGameSessionStore();
+	const { startSession, addEvents, updateEventById, endSession, resetCurrentSession } = useEnagementGameSessionStore();
 
 	useEffect(() => {
 		startSession(user, config);

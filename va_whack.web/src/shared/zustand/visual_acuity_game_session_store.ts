@@ -6,12 +6,12 @@ import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import type { IAppearanceEvent, IGameConfig, IGameSession, IUserDetails } from '..';
+import type { IAppearanceEvent, IVAGameConfig, IVAGameSession, IUserDetails } from '..';
 
-interface GameSessionState {
-	currentSession: IGameSession | null;
-	sessionHistory: IGameSession[];
-	startSession: (user: IUserDetails, config: IGameConfig) => void;
+interface VAGameSessionState {
+	currentSession: IVAGameSession | null;
+	sessionHistory: IVAGameSession[];
+	startSession: (user: IUserDetails, config: IVAGameConfig) => void;
 	addEvents: (newEvents: IAppearanceEvent[]) => void;
 	updateEventById: (id: number, update: Partial<IAppearanceEvent>) => void;
 	endSession: () => void;
@@ -19,7 +19,7 @@ interface GameSessionState {
 	clearAllSessions: () => void;
 }
 
-export const useGameSessionStore = create<GameSessionState>()(
+export const useVAGameSessionStore = create<VAGameSessionState>()(
 	devtools(
 		immer(
 			persist(
@@ -27,7 +27,7 @@ export const useGameSessionStore = create<GameSessionState>()(
 					currentSession: null,
 					sessionHistory: [],
 
-					startSession: (user: IUserDetails, config: IGameConfig) =>
+					startSession: (user: IUserDetails, config: IVAGameConfig) =>
 						set(() => ({
 							currentSession: {
 								gameId: uuidv4(),
@@ -39,14 +39,14 @@ export const useGameSessionStore = create<GameSessionState>()(
 						})),
 
 					addEvents: (newEvents: IAppearanceEvent[]) =>
-						set((state: GameSessionState) => {
+						set((state: VAGameSessionState) => {
 							if (state.currentSession) {
 								state.currentSession.events.push(...newEvents);
 							}
 						}),
 
 					updateEventById: (id: number, update: Partial<IAppearanceEvent>) =>
-						set((state: GameSessionState) => {
+						set((state: VAGameSessionState) => {
 							if (state.currentSession) {
 								const index = state.currentSession.events.findIndex((e) => e.id === id);
 								if (index !== -1) {
@@ -56,7 +56,7 @@ export const useGameSessionStore = create<GameSessionState>()(
 						}),
 
 					endSession: () =>
-						set((state: GameSessionState) => {
+						set((state: VAGameSessionState) => {
 							if (state.currentSession) {
 								state.currentSession.endTime = Date.now();
 								state.sessionHistory.push({ ...state.currentSession });
@@ -75,7 +75,7 @@ export const useGameSessionStore = create<GameSessionState>()(
 							sessionHistory: [],
 						})),
 				}),
-				{ name: 'game-session-store' }
+				{ name: 'va-game-session-store' }
 			)
 		),
 		{ name: 'zustand-game-session' }
