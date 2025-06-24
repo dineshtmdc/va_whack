@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background -->
+  <rect width="64" height="64" rx="12" ry="12" fill="#f8fafc"></rect>
+
+  <!-- Eye outline -->
+  <path d="M8,32 Q32,10 56,32 Q32,54 8,32 Z" fill="none" stroke="#0f172a" stroke-width="4"></path>
+
+  <!-- Pupil -->
+  <circle cx="32" cy="32" r="8" fill="#0f172a"></circle>
+
+  <!-- Letter E inside pupil -->
+  <text x="27" y="37" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#ffffff">E</text>
+</svg>
