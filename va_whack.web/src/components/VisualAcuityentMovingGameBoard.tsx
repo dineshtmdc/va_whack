@@ -1,10 +1,9 @@
 /** @format */
 
 import { useEffect, useRef, useState } from 'react';
-import hammerCursor from '../assets/hammer.jpg';
 import { useVAGameSessionStore, type IUserDetails, type IVAMovingGameConfig } from '../shared';
 import { GameSessionInfo } from '.';
-import { BarChart, RotateCcw, LogOut } from 'lucide-react';
+import { BarChart, RotateCcw, Home } from 'lucide-react';
 
 interface IProps {
 	config: IVAMovingGameConfig;
@@ -138,25 +137,24 @@ export const VisualAcuityentMovingGameBoard = ({ config, user, onExit }: IProps)
 			className='relative w-full h-screen flex items-center justify-center pt-16 pb-4 px-4 overflow-hidden'
 			style={{
 				backgroundColor: bgColor,
-				cursor: `url(${hammerCursor}) 16 16, auto`,
 			}}>
 			{/* Top Buttons */}
-			<div className='absolute top-4 right-24 z-20 flex gap-2'>
+			<div className='absolute top-4 right-16 z-20 flex gap-2'>
+				<button onClick={onExit} title='Back to Selector' className='bg-white text-black p-2 rounded-full shadow hover:bg-gray-200'>
+					<Home className='w-5 h-5' />
+				</button>
 				<button onClick={resetGame} title='Restart' className='bg-white text-black p-2 rounded-full shadow hover:bg-gray-200'>
 					<RotateCcw className='w-5 h-5' />
 				</button>
 				<button onClick={() => setShowStatsDialog(true)} title='View Stats' className='bg-white text-black p-2 rounded-full shadow hover:bg-gray-200'>
 					<BarChart className='w-5 h-5' />
 				</button>
-				<button onClick={onExit} title='Back to Selector' className='bg-white text-black p-2 rounded-full shadow hover:bg-gray-200'>
-					<LogOut className='w-5 h-5' />
-				</button>
 			</div>
 
 			{/* Debug Info */}
-			<div className='absolute top-4 left-4 z-20 bg-white text-black text-xs px-2 py-1 rounded shadow'>
+			{/* <div className='absolute top-4 left-4 z-20 bg-white text-black text-xs px-2 py-1 rounded shadow'>
 				PPI: {ppi.toFixed(2)} | Cell: {cellSize.toFixed(1)}px | Rows: {rows}
-			</div>
+			</div> */}
 
 			{/* Grid */}
 			<div
