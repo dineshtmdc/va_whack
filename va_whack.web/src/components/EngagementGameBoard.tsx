@@ -2,17 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react';
 import hammerCursor from '../assets/hammer.jpg';
-import { Dialog } from '@headlessui/react';
 import { useEnagementGameSessionStore, type IAppearanceEvent, type IMole, type IUserDetails, type IEnagementGameConfig } from '../shared';
 import { Mole, GameSessionInfo } from '.';
 import { FakeMole } from './FakeMole';
+import { Home, RotateCcw, BarChart } from 'lucide-react';
 
 interface IProps {
 	config: IEnagementGameConfig;
 	user: IUserDetails;
+	onExit: () => void;
 }
 
-export const EngagementGameBoard = ({ config, user }: IProps) => {
+export const EngagementGameBoard = ({ config, onExit, user }: IProps) => {
 	const [mice, setMice] = useState<IMole[]>([]);
 	const [prevMouseIds, setPrevMouseIds] = useState<number[]>([]);
 	const [rows, setRows] = useState(0);
@@ -22,7 +23,6 @@ export const EngagementGameBoard = ({ config, user }: IProps) => {
 	const [missCount, setMissCount] = useState(0);
 	const [gameOver, setGameOver] = useState(false);
 	const [userClickedThisCycle, setUserClickedThisCycle] = useState(false);
-	const [showSummaryDialog, setShowSummaryDialog] = useState(false);
 	const [showStatsDialog, setShowStatsDialog] = useState(false);
 	const nextEventIdRef = useRef(1);
 	const { startSession, addEvents, updateEventById, endSession, resetCurrentSession } = useEnagementGameSessionStore();
@@ -59,14 +59,13 @@ export const EngagementGameBoard = ({ config, user }: IProps) => {
 		const newMice: IMole[] = Array.from({ length: config.mouseCount }).map((_, i) => {
 			const row = Math.floor(Math.random() * rows);
 			const col = Math.floor(Math.random() * cols);
-
 			const isFake = Math.random() < 0.2;
 
 			return {
 				id: nextEventIdRef.current + i,
 				row,
 				col,
-				mole_type: isFake ? 'fake-mole' : 'mole', // FIXED
+				mole_type: isFake ? 'fake-mole' : 'mole',
 			};
 		});
 
@@ -76,7 +75,7 @@ export const EngagementGameBoard = ({ config, user }: IProps) => {
 
 		const newEvents: IAppearanceEvent[] = newMice.map((m) => ({
 			id: m.id,
-			targetType: m.mole_type, // FIXED
+			targetType: m.mole_type,
 			mouseSize: config.mouseSize,
 			row: m.row,
 			col: m.col,
@@ -108,7 +107,6 @@ export const EngagementGameBoard = ({ config, user }: IProps) => {
 			setMice([]);
 			setPrevMouseIds([]);
 			endSession();
-			setShowSummaryDialog(true);
 			return;
 		}
 
@@ -128,7 +126,6 @@ export const EngagementGameBoard = ({ config, user }: IProps) => {
 		setMissCount(0);
 		setGameOver(false);
 		setUserClickedThisCycle(false);
-		setShowSummaryDialog(false);
 		startSession(user, config);
 	};
 
@@ -152,6 +149,19 @@ export const EngagementGameBoard = ({ config, user }: IProps) => {
 					spawnMice();
 				}
 			}}>
+			{/* Top-right Controls */}
+			<div className='absolute top-4 right-16 z-20 flex gap-2'>
+				<button onClick={onExit} title='Back to Selector' className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
+					<Home className='w-5 h-5' />
+				</button>
+				<button onClick={resetGame} title='Restart Game' className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
+					<RotateCcw className='w-5 h-5' />
+				</button>
+				<button onClick={() => setShowStatsDialog(true)} title='View Stats' className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
+					<BarChart className='w-5 h-5' />
+				</button>
+			</div>
+
 			{/* HUD */}
 			<div className='absolute top-4 left-4 z-20 text-white text-lg flex items-center space-x-6'>
 				<p>Time Left: {formatTime(timeLeft)}</p>
@@ -229,26 +239,6 @@ export const EngagementGameBoard = ({ config, user }: IProps) => {
 					);
 				})}
 			</div>
-
-			{/* Summary Dialog */}
-			<Dialog open={showSummaryDialog} onClose={() => {}} className='relative z-50'>
-				<div className='fixed inset-0 bg-black/40' aria-hidden='true' />
-				<div className='fixed inset-0 flex items-center justify-center p-4'>
-					<Dialog.Panel className='mx-auto max-w-sm rounded-xl bg-white p-6 space-y-4 shadow-xl'>
-						<Dialog.Title className='text-lg font-bold text-gray-800'>Game Over</Dialog.Title>
-						<p className='text-gray-700'>Hits: {hitCount}</p>
-						<p className='text-gray-700'>Misses: {missCount}</p>
-						<div className='flex flex-col gap-3 pt-4'>
-							<button onClick={resetGame} className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium'>
-								Restart Game
-							</button>
-							<button onClick={() => setShowStatsDialog(true)} className='px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-medium'>
-								View Game Stats
-							</button>
-						</div>
-					</Dialog.Panel>
-				</div>
-			</Dialog>
 
 			{/* Stats Dialog */}
 			<GameSessionInfo isOpen={showStatsDialog} onClose={() => setShowStatsDialog(false)} />

@@ -20,7 +20,8 @@ export const VAScalingControlPanel = ({ config, onChange }: IProps) => {
 	return (
 		<>
 			{/* Gear Icon - top right */}
-			<div className='fixed top-4 right-4 z-50'>
+
+			<div className='absolute top-4 right-4 z-50'>
 				<button onClick={() => setOpen((o) => !o)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' aria-label='Toggle Control Panel'>
 					{open ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
 				</button>
@@ -28,7 +29,7 @@ export const VAScalingControlPanel = ({ config, onChange }: IProps) => {
 
 			{/* Floating panel from right */}
 			{open && (
-				<div className='fixed top-0 right-0 h-full w-80 bg-white shadow-lg z-40 overflow-y-auto p-4 space-y-4 border-l border-gray-200'>
+				<div className='absolute top-16 right-4 z-50 w-72 max-h-[80vh] overflow-y-auto shadow-xl rounded-xl bg-white p-4 space-y-3'>
 					<h3 className='text-lg font-semibold text-center'>Scale Game Settings</h3>
 
 					{/* Viewing Distance Dropdown */}

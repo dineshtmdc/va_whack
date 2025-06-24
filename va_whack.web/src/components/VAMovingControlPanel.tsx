@@ -20,6 +20,7 @@ export const VAMovingControlPanel = ({ config, onChange }: Props) => {
 	return (
 		<>
 			{/* Gear Icon */}
+
 			<div className='absolute top-4 right-4 z-50'>
 				<button onClick={() => setOpen((o) => !o)} className='bg-white p-2 rounded shadow hover:bg-gray-100' aria-label='Toggle Control Panel'>
 					{open ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
