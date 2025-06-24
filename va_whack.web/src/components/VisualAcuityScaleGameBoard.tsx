@@ -1,7 +1,7 @@
 /** @format */
 
 import { useEffect, useState } from 'react';
-import { FileText, X, Grid3x3, ArrowDown, ArrowUp } from 'lucide-react';
+import { FileText, X, ArrowDown, ArrowUp, Home } from 'lucide-react';
 import type { IVAScaleGameConfig, IUserDetails } from '../shared';
 import { VAScaleLogPanel } from '.';
 
@@ -42,7 +42,6 @@ export const VisualAcuityScaleGameBoard = ({ config, onExit }: IProps) => {
 	const [initialResponseGiven, setInitialResponseGiven] = useState(false);
 	const [responseGiven, setResponseGiven] = useState(false);
 	const [gameOverMessage, setGameOverMessage] = useState<string | null>(null);
-	// const [lastResponse, setLastResponse] = useState<'I can see' | 'I can’t see' | null>(null);
 
 	const verticalPaddingPercent = config.verticalPadding;
 	const horizontalPaddingPercent = config.horizontalPadding;
@@ -71,7 +70,6 @@ export const VisualAcuityScaleGameBoard = ({ config, onExit }: IProps) => {
 		setInitialResponseGiven(false);
 		setResponseGiven(false);
 		setGameOverMessage(null);
-		// setLastResponse(null);
 	}, [config]);
 
 	const handleScale = (direction: 'Up' | 'Down') => {
@@ -94,8 +92,6 @@ export const VisualAcuityScaleGameBoard = ({ config, onExit }: IProps) => {
 		setPendingScale(entry);
 		setResponseGiven(false);
 		setAllowResponse(true);
-
-		// Disable scale buttons until user responds
 		setAllowScaleDown(false);
 		setAllowScaleUp(false);
 	};
@@ -114,7 +110,6 @@ export const VisualAcuityScaleGameBoard = ({ config, onExit }: IProps) => {
 		setPendingScale(null);
 		setResponseGiven(true);
 		setAllowResponse(false);
-		// setLastResponse(response);
 
 		if (!initialResponseGiven) {
 			setInitialResponseGiven(true);
@@ -152,6 +147,13 @@ export const VisualAcuityScaleGameBoard = ({ config, onExit }: IProps) => {
 			<div className='fixed top-4 left-4 z-50'>
 				<button title='Toggle Scale Log' onClick={() => setLogPanelOpen((v) => !v)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
 					{logPanelOpen ? <X className='w-5 h-5' /> : <FileText className='w-5 h-5' />}
+				</button>
+			</div>
+
+			{/* Exit Button - top right with 24px inward offset */}
+			<div className='fixed top-4 right-[72px] z-50'>
+				<button onClick={onExit} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' title='Exit to Home'>
+					<Home className='w-5 h-5' />
 				</button>
 			</div>
 
@@ -220,14 +222,9 @@ export const VisualAcuityScaleGameBoard = ({ config, onExit }: IProps) => {
 							</button>
 						</div>
 					)}
-
-					{/* Exit - Always visible */}
-					<button onClick={onExit} className='p-2 rounded bg-white shadow border hover:bg-gray-100 ml-2'>
-						<Grid3x3 size={16} />
-					</button>
 				</div>
 
-				{/* Game Over */}
+				{/* Game Over Message */}
 				{gameOverMessage && <div className='absolute bottom-20 text-sm font-semibold text-center text-red-600 px-4'>{gameOverMessage}</div>}
 			</div>
 		</div>

@@ -51,7 +51,7 @@ export const GameSelector = ({ user }: { user: IUserDetails }) => {
 		return (
 			<>
 				<EnagementControlPanel config={engementConfig} onChange={(u) => setEngagementConfig((p) => ({ ...p, ...u }))} />
-				<EngagementGameBoard config={engementConfig} user={user} />
+				<EngagementGameBoard config={engementConfig} user={user} onExit={() => setMode(null)} />
 			</>
 		);
 	}

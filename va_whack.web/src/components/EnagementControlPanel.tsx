@@ -23,13 +23,15 @@ export const EnagementControlPanel = ({ config, onChange }: EnagementControlPane
 	};
 
 	return (
-		<div className='absolute top-0 left-1/2 -translate-x-1/2 z-50'>
-			<button onClick={() => setOpen((o) => !o)} className='bg-white p-2 rounded shadow hover:bg-gray-100' aria-label='Toggle Control Panel'>
-				{open ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
-			</button>
+		<>
+			<div className='absolute top-4 right-4 z-50'>
+				<button onClick={() => setOpen((o) => !o)} className='bg-white p-2 rounded shadow hover:bg-gray-100' aria-label='Toggle Control Panel'>
+					{open ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
+				</button>
+			</div>
 
 			{open && (
-				<div className='mt-2 bg-white rounded-lg shadow-lg p-4 w-64 space-y-4'>
+				<div className='absolute top-16 right-4 z-50 w-72 max-h-[80vh] overflow-y-auto shadow-xl rounded-xl bg-white p-4 space-y-3'>
 					<h3 className='text-lg font-semibold text-center'>Game Settings</h3>
 
 					{/* Mouse Size Slider */}
@@ -66,6 +68,6 @@ export const EnagementControlPanel = ({ config, onChange }: EnagementControlPane
 					</div>
 				</div>
 			)}
-		</div>
+		</>
 	);
 };
