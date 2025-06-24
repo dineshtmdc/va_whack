@@ -6,12 +6,12 @@ import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import type { IAppearanceEvent, IVAGameConfig, IVAGameSession, IUserDetails } from '..';
+import type { IAppearanceEvent, IVAMovingGameConfig, IVAGameSession, IUserDetails } from '..';
 
 interface VAGameSessionState {
 	currentSession: IVAGameSession | null;
 	sessionHistory: IVAGameSession[];
-	startSession: (user: IUserDetails, config: IVAGameConfig) => void;
+	startSession: (user: IUserDetails, config: IVAMovingGameConfig) => void;
 	addEvents: (newEvents: IAppearanceEvent[]) => void;
 	updateEventById: (id: number, update: Partial<IAppearanceEvent>) => void;
 	endSession: () => void;
@@ -27,7 +27,7 @@ export const useVAGameSessionStore = create<VAGameSessionState>()(
 					currentSession: null,
 					sessionHistory: [],
 
-					startSession: (user: IUserDetails, config: IVAGameConfig) =>
+					startSession: (user: IUserDetails, config: IVAMovingGameConfig) =>
 						set(() => ({
 							currentSession: {
 								gameId: uuidv4(),
