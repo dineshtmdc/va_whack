@@ -7,12 +7,12 @@ import { useEnagementGameSessionStore, type IAppearanceEvent, type IMole, type I
 import { Mole, GameSessionInfo } from '.';
 import { FakeMole } from './FakeMole';
 
-interface EngagementGameBoardProps {
+interface IProps {
 	config: IEnagementGameConfig;
 	user: IUserDetails;
 }
 
-export const EngagementGameBoard = ({ config, user }: EngagementGameBoardProps) => {
+export const EngagementGameBoard = ({ config, user }: IProps) => {
 	const [mice, setMice] = useState<IMole[]>([]);
 	const [prevMouseIds, setPrevMouseIds] = useState<number[]>([]);
 	const [rows, setRows] = useState(0);

@@ -78,13 +78,41 @@ export interface IVAGameSession {
 	endTime?: number;
 }
 
-export interface IVAGameConfig {
-	holeSize: number;
-	holeGap: number;
+export interface IVAMovingGameConfig {
+	moveSpeed?: number; // deg/s
+	moveDirection?: 'left-to-right' | 'right-to-left';
+	viewingDistanceCm?: number;
+	brightness?: number; // 0–100%
+	logMar: number;
+	ratio: number;
+	centralIntensity: number; // 0–100%
+	surroundIntensity: number; // 0–100%
+	spacingDeg?: number;
 	outerColor: string;
 	innerColor: string;
 	bgColor: string;
+}
+
+export interface IVAScaleGameConfig {
+	holeSize: number;
+	minHoleSize: number;
+	maxHoleSize: number;
 	ratio: number;
-	moveDirection?: 'left-to-right' | 'right-to-left';
-	moveSpeed?: number; // pixels per second
+	innerColor: string;
+	outerColor: string;
+	bgColor: string;
+	holeGap: number;
+	verticalPadding: number;
+	horizontalPadding: number;
+	viewingDistanceCm: number;
+}
+
+export interface IScaleLogEntry {
+	timestamp: number;
+	outerDiameter: number;
+	innerDiameter: number;
+	ratio: number;
+	scaleDirection: 'Up' | 'Down';
+	logmar: number;
+	userResponse?: 'I can see' | 'I can’t see';
 }
