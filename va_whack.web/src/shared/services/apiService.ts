@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // The base URL for your locally running FastAPI back-end.
 // This should be moved to an environment variable in a real application.
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
