@@ -30,17 +30,31 @@ class PlayerRead(BaseModel):
         from_attributes = True
 
 # ==============================================================================
-# Schema for verifying a player's PIN.
+# Schema for verifying a player's initial registration PIN.
 # ==============================================================================
 class PinVerify(BaseModel):
     email: EmailStr
     pin: str
 
 # ==============================================================================
-# Schema for requesting a new verification PIN.
+# Schema for requesting a new verification PIN (for registration or login).
 # ==============================================================================
-class PinResendRequest(BaseModel):
+class PinRequest(BaseModel):
     email: EmailStr
+
+# ==============================================================================
+# Schema for the data required to exchange a login PIN for an access token.
+# ==============================================================================
+class TokenRequest(BaseModel):
+    email: EmailStr
+    pin: str
+
+# ==============================================================================
+# Schema for the API response containing a JWT access token.
+# ==============================================================================
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 # ==============================================================================
 # Schema representing a single trial (e.g., one mole appearance) in a game.
@@ -52,9 +66,9 @@ class TrialData(BaseModel):
 
 # ==============================================================================
 # Schema for submitting a completed game session's data.
+# The player_id is no longer needed here as it's derived from the auth token.
 # ==============================================================================
 class SessionCreate(BaseModel):
-    player_id: int
     trials: List[TrialData]
 
 # ==============================================================================

@@ -6,3 +6,4 @@ python-dotenv
 sendgrid
 passlib[bcrypt]
 email-validator
+python-jose[cryptography]

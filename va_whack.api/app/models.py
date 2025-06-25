@@ -6,7 +6,7 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-import datetime
+from datetime import datetime, timezone
 import enum
 
 Base = declarative_base()
@@ -43,8 +43,8 @@ class PinNumber(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, index=True, nullable=False)
     pin = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    expires_at = Column(DateTime)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at = Column(DateTime(timezone=True))
     status = Column(Enum(PinStatus), default=PinStatus.ACTIVE, nullable=False)
 
 # ==============================================================================
@@ -55,7 +55,7 @@ class GameSession(Base):
     __tablename__ = "game_sessions"
     id = Column(Integer, primary_key=True, index=True)
     player_id = Column(Integer, ForeignKey("players.id"))
-    session_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    session_timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     calculated_logmar = Column(Float)
     
     player = relationship("Player", back_populates="sessions")

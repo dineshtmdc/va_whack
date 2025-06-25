@@ -50,6 +50,10 @@ SENDGRID_API_KEY="SG.ogu_cKrkSuig2sFtT8V9cQ.keN_av7h18cl2HvSZFk0FmZUGb1zIPdrCRfw
 # This must be an email address you have verified as a sender in SendGrid
 SENDER_EMAIL="visionwhack@gmail.com"
 ```
+# Generate a strong secret key by running this in a Python shell:
+SECRET_KEY="REPLACE_WITH_YOUR_32_CHAR_SECRET_KEY"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 ### **Step 4: Set Up Python Environment & Install Dependencies**
 1.  **Create a virtual environment:**
