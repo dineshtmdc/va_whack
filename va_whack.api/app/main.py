@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .db.session import engine
 from . import models
 from .api.endpoints import players, sessions, auth
+from .core.config import settings
 
 # This will create the database tables if they don't exist
 # For a production app, use Alembic for migrations instead.
@@ -21,11 +22,7 @@ app = FastAPI(
 )
 
 # Set up CORS middleware
-origins = [
-    "http://localhost:3000", # Common port for React dev servers
-    "http://localhost:5173", # Default port for Vite dev servers
-    # Add your deployed front-end URL here for production
-]
+origins = settings.CORS_ORIGINS.split(",")
 
 app.add_middleware(
     CORSMiddleware,
