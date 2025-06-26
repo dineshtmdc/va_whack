@@ -12,3 +12,4 @@ export * from './GameTile';
 export * from './VAScalingControlPanel';
 export * from './VisualAcuityScaleGameBoard';
 export * from './VAScaleLogPanel';
+export * from './FullscreenHandler';
