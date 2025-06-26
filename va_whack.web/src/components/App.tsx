@@ -1,40 +1,39 @@
 /** @format */
 
-import { useEffect, useState } from 'react';
-import type { IUserDetails } from '../shared';
-import { Login, GameSelector } from '.';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Login, GameSelector, FullscreenHandler } from '.';
+
+import { ProtectedRoute } from '../routes/ProtectedRoute';
+import { useAuth } from '../auth/useAuth';
+import { EngagementRoute, VAFastRoute, VAScaleRoute } from '../routes';
 
 export const App = () => {
-	const [player, setPlayer] = useState<IUserDetails | null>(null);
+	const { user } = useAuth();
 
-	useEffect(() => {
-		if (player) {
-			const enterFullscreen = async () => {
-				try {
-					const el = document.documentElement;
-					if (el.requestFullscreen) {
-						await el.requestFullscreen();
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					} else if ((el as any).webkitRequestFullscreen) {
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						await (el as any).webkitRequestFullscreen();
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					} else if ((el as any).msRequestFullscreen) {
-						// eslint-disable-next-line @typescript-eslint/no-explicit-any
-						await (el as any).msRequestFullscreen();
-					}
-				} catch (err) {
-					console.error('Failed to enter fullscreen:', err);
-				}
-			};
+	return (
+		<BrowserRouter>
+			<FullscreenHandler />
 
-			enterFullscreen();
-		}
-	}, [player]);
+			<Routes>
+				{/* Login page */}
+				<Route path='/login' element={user ? <Navigate to='/game-selector' replace /> : <Login />} />
 
-	if (!player) {
-		return <Login onLoginSuccess={(user) => setPlayer(user)} />;
-	}
+				{/* Game selector and nested routes */}
+				<Route
+					path='/game-selector/*'
+					element={
+						<ProtectedRoute>
+							<GameSelector user={user!} />
+						</ProtectedRoute>
+					}>
+					<Route path='engagement' element={<EngagementRoute user={user!} />} />
+					<Route path='va-fast' element={<VAFastRoute user={user!} />} />
+					<Route path='va-scale' element={<VAScaleRoute user={user!} />} />
+				</Route>
 
-	return <GameSelector user={player} />;
+				{/* Fallback redirect */}
+				<Route path='*' element={<Navigate to={user ? '/game-selector' : '/login'} replace />} />
+			</Routes>
+		</BrowserRouter>
+	);
 };
