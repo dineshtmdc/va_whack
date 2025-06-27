@@ -21,10 +21,8 @@ export const GameSelector = ({ user }: { user: IUserDetails }) => {
 
 			<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl'>
 				<GameTile title='Engagement Mode' description='Track attention using fast-paced stimuli.' icon={<MousePointerClick className='w-8 h-8' />} color='bg-green-500 hover:bg-green-600' to='engagement' />
-
-				<GameTile title='VA OKN-FAST Mode' description='Estimate vision clarity with reflexive targets.' icon={<Eye className='w-8 h-8' />} color='bg-blue-500 hover:bg-blue-600' to='va-fast' />
-
 				<GameTile title='VA Scale Mode' description='Scale center circle to determine visual threshold.' icon={<ZoomIn className='w-8 h-8' />} color='bg-orange-500 hover:bg-orange-600' to='va-scale' />
+				<GameTile title='VA OKN-FAST Mode' description='Estimate vision clarity with reflexive targets.' icon={<Eye className='w-8 h-8' />} color='bg-blue-500 hover:bg-blue-600' to='va-fast' />
 			</div>
 		</div>
 	);

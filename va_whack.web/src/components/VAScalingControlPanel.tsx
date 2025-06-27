@@ -12,52 +12,60 @@ interface IProps {
 export const VAScalingControlPanel = ({ config, onChange }: IProps) => {
 	const [open, setOpen] = useState(false);
 
+	const computeSizeFromLogMAR = (logmar: number, viewingDistanceCm: number): number => {
+		const distanceMm = viewingDistanceCm * 10;
+		const angleDeg = (5 * Math.pow(10, logmar)) / 60;
+		const angleRad = (angleDeg * Math.PI) / 180;
+		return 2 * distanceMm * Math.tan(angleRad / 2);
+	};
+
 	const handleChange = (key: keyof IVAScaleGameConfig, value: string | number | boolean) => {
 		const parsed = typeof value === 'string' && /^\d+(\.\d+)?$/.test(value) ? parseFloat(value) : value;
+
 		onChange({ [key]: parsed });
+
+		// Auto-adjust padding and hole sizes when distance changes
+		if (key === 'viewingDistanceCm') {
+			const newDistance = typeof parsed === 'number' ? parsed : parseFloat(parsed as string);
+			const autoMaxSize = computeSizeFromLogMAR(1.0, newDistance); // logMAR +1.0
+
+			// Calculate padding proportionally: base = 20% at 150 cm
+			const basePadding = 20;
+			const computedPadding = Math.max(5, Math.min(25, Math.round(basePadding * (150 / newDistance))));
+
+			onChange({
+				maxHoleSize: autoMaxSize,
+				minHoleSize: autoMaxSize / 3,
+				verticalPadding: computedPadding,
+				horizontalPadding: computedPadding,
+			});
+		}
 	};
 
 	return (
 		<>
-			{/* Gear Icon - top right */}
-
+			{/* Gear Icon */}
 			<div className='absolute top-4 right-4 z-50'>
 				<button onClick={() => setOpen((o) => !o)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' aria-label='Toggle Control Panel'>
 					{open ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
 				</button>
 			</div>
 
-			{/* Floating panel from right */}
+			{/* Control Panel */}
 			{open && (
 				<div className='absolute top-16 right-4 z-50 w-72 max-h-[80vh] overflow-y-auto shadow-xl rounded-xl bg-white p-4 space-y-3'>
 					<h3 className='text-lg font-semibold text-center'>Scale Game Settings</h3>
 
-					{/* Viewing Distance Dropdown */}
+					{/* Viewing Distance */}
 					<div>
 						<label className='block text-sm font-medium text-gray-700'>Viewing Distance (cm)</label>
 						<select value={config.viewingDistanceCm} onChange={(e) => handleChange('viewingDistanceCm', e.target.value)} className='w-full mt-1 px-2 py-1 border rounded text-sm'>
-							<option value={100}>100 cm</option>
-							<option value={150}>150 cm</option>
-							<option value={200}>200 cm</option>
+							{[50, 100, 150, 200, 250, 300, 350].map((val) => (
+								<option key={val} value={val}>
+									{val} cm
+								</option>
+							))}
 						</select>
-					</div>
-
-					{/* Hole Size */}
-					<div>
-						<label className='block text-sm font-medium text-gray-700'>🕳️ Default Hole Size (mm)</label>
-						<input type='number' min={10} value={config.holeSize} onChange={(e) => handleChange('holeSize', e.target.value)} className='w-full mt-1 px-2 py-1 border rounded text-sm' />
-					</div>
-
-					{/* Min Size */}
-					<div>
-						<label className='block text-sm font-medium text-gray-700'>🕳️ Min Size (mm)</label>
-						<input type='number' min={5} value={config.minHoleSize} onChange={(e) => handleChange('minHoleSize', e.target.value)} className='w-full mt-1 px-2 py-1 border rounded text-sm' />
-					</div>
-
-					{/* Max Size */}
-					<div>
-						<label className='block text-sm font-medium text-gray-700'>🕳️ Max Size (mm)</label>
-						<input type='number' max={100} value={config.maxHoleSize} onChange={(e) => handleChange('maxHoleSize', e.target.value)} className='w-full mt-1 px-2 py-1 border rounded text-sm' />
 					</div>
 
 					{/* Hole Gap */}
@@ -85,13 +93,13 @@ export const VAScalingControlPanel = ({ config, onChange }: IProps) => {
 						<input type='number' min={0} max={50} value={config.horizontalPadding} onChange={(e) => handleChange('horizontalPadding', e.target.value)} className='w-full mt-1 px-2 py-1 border rounded text-sm' />
 					</div>
 
-					{/* Outer Color */}
+					{/* Outer Circle Color */}
 					<div>
 						<label className='block text-sm font-medium text-gray-700'>Outer Circle Color</label>
 						<input type='color' value={config.outerColor} onChange={(e) => handleChange('outerColor', e.target.value)} className='w-full mt-1' />
 					</div>
 
-					{/* Inner Color */}
+					{/* Inner Circle Color */}
 					<div>
 						<label className='block text-sm font-medium text-gray-700'>Inner Circle Color</label>
 						<input type='color' value={config.innerColor} onChange={(e) => handleChange('innerColor', e.target.value)} className='w-full mt-1' />

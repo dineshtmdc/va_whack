@@ -1,6 +1,6 @@
 /** @format */
 
-import type { IUserDetails } from '..';
+import type { IUserDetails, ResponseOption, ScaleMethod } from '..';
 
 export interface IMole {
 	id: number;
@@ -112,7 +112,7 @@ export interface IScaleLogEntry {
 	outerDiameter: number;
 	innerDiameter: number;
 	ratio: number;
-	scaleDirection: 'Up' | 'Down';
+	scaleMethod: ScaleMethod;
 	logmar: number;
-	userResponse?: 'I can see' | 'I can’t see';
+	userResponse?: ResponseOption;
 }

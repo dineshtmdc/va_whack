@@ -1,8 +1,8 @@
 /** @format */
 
-import { useEffect, useState } from 'react';
-import { FileText, X, ArrowDown, ArrowUp, Home } from 'lucide-react';
-import type { IVAScaleGameConfig, IUserDetails } from '../shared';
+import { useEffect, useRef, useState } from 'react';
+import { FileText, X, Home, RotateCcw } from 'lucide-react';
+import type { IVAScaleGameConfig, IUserDetails, IScaleLogEntry, ResponseOption, Phase, ScaleMethod } from '../shared';
 import { VAScaleLogPanel } from '.';
 
 interface IProps {
@@ -11,129 +11,157 @@ interface IProps {
 	onExit: () => void;
 }
 
-interface ScaleLogEntry {
-	timestamp: number;
-	outerDiameter: number;
-	innerDiameter: number;
-	ratio: number;
-	scaleDirection: 'Up' | 'Down';
-	logmar: number;
-	userResponse?: 'I can see' | 'I can’t see';
-}
-
 export const VisualAcuityScaleGameBoard = ({ config, onExit }: IProps) => {
 	const mmToPx = (mm: number) => mm * 3.78;
 	const toOdd = (n: number) => (n <= 1 ? 1 : n % 2 === 0 ? n - 1 : n);
+	const getScaledMm = (mm: number) => mm * (config.viewingDistanceCm / 150);
+
 	const calculateLogMAR = (diameterMm: number, distanceCm: number) => {
 		const distanceMm = distanceCm * 10;
 		const angleArcMin = (diameterMm / distanceMm) * (180 / Math.PI) * 60;
 		return Math.log10(angleArcMin / 5);
 	};
 
-	const [centerDiameter, setCenterDiameter] = useState(config.maxHoleSize);
+	const [centerDiameter, setCenterDiameter] = useState(config.holeSize);
 	const [rows, setRows] = useState(1);
 	const [cols, setCols] = useState(1);
-	const [logEntries, setLogEntries] = useState<ScaleLogEntry[]>([]);
-	const [pendingScale, setPendingScale] = useState<ScaleLogEntry | null>(null);
+	const [logEntries, setLogEntries] = useState<IScaleLogEntry[]>([]);
 	const [logPanelOpen, setLogPanelOpen] = useState(false);
-	const [allowScaleDown, setAllowScaleDown] = useState(false);
-	const [allowScaleUp, setAllowScaleUp] = useState(false);
 	const [allowResponse, setAllowResponse] = useState(true);
 	const [initialResponseGiven, setInitialResponseGiven] = useState(false);
-	const [responseGiven, setResponseGiven] = useState(false);
 	const [gameOverMessage, setGameOverMessage] = useState<string | null>(null);
 
-	const verticalPaddingPercent = config.verticalPadding;
-	const horizontalPaddingPercent = config.horizontalPadding;
-	const cellSizePx = mmToPx(config.maxHoleSize + config.holeGap);
+	const [phase, setPhase] = useState<Phase>('quickSearch');
+	const [trialResponses, setTrialResponses] = useState<ResponseOption[]>([]);
+	const [bestlineFound, setBestlineFound] = useState(false);
+
+	const prevDiameterRef = useRef(centerDiameter);
+
+	const getCellSizePx = () => mmToPx(getScaledMm(config.holeSize + config.holeGap));
 
 	const updateGridSize = () => {
-		const usableWidth = window.innerWidth * (1 - horizontalPaddingPercent / 100);
-		const usableHeight = window.innerHeight * (1 - verticalPaddingPercent / 100);
-		setCols(toOdd(Math.floor(usableWidth / cellSizePx)));
-		setRows(toOdd(Math.floor(usableHeight / cellSizePx)));
+		const cellSize = getCellSizePx();
+		const usableWidth = window.innerWidth * (1 - config.horizontalPadding / 100);
+		const usableHeight = window.innerHeight * (1 - config.verticalPadding / 100);
+		setCols(toOdd(Math.floor(usableWidth / cellSize)));
+		setRows(toOdd(Math.floor(usableHeight / cellSize)));
 	};
 
-	useEffect(updateGridSize, [config.maxHoleSize, config.holeGap, verticalPaddingPercent, horizontalPaddingPercent, cellSizePx]);
+	useEffect(updateGridSize, [config.holeSize, config.holeGap, config.verticalPadding, config.horizontalPadding, config.viewingDistanceCm]);
+
 	useEffect(() => {
 		window.addEventListener('resize', updateGridSize);
 		return () => window.removeEventListener('resize', updateGridSize);
 	}, []);
 
 	useEffect(() => {
-		setCenterDiameter(config.maxHoleSize);
-		setPendingScale(null);
+		setCenterDiameter(config.holeSize);
 		setLogEntries([]);
-		setAllowScaleDown(false);
-		setAllowScaleUp(false);
 		setAllowResponse(true);
 		setInitialResponseGiven(false);
-		setResponseGiven(false);
 		setGameOverMessage(null);
+		setPhase('quickSearch');
+		setTrialResponses([]);
+		setBestlineFound(false);
+		prevDiameterRef.current = config.holeSize;
+		updateGridSize();
 	}, [config]);
 
-	const handleScale = (direction: 'Up' | 'Down') => {
-		if (!responseGiven) return;
-
-		const delta = direction === 'Up' ? 1 : -1;
+	const autoScale = (scaleMethod: ScaleMethod) => {
+		const delta = scaleMethod === 'increase' ? 1 : -1;
 		const next = Math.min(Math.max(centerDiameter + delta, config.minHoleSize), config.maxHoleSize);
-		if (next === centerDiameter) return;
-
-		const entry: ScaleLogEntry = {
-			timestamp: Date.now(),
-			outerDiameter: next,
-			innerDiameter: next * config.ratio,
-			ratio: config.ratio,
-			scaleDirection: direction,
-			logmar: calculateLogMAR(next, config.viewingDistanceCm),
-		};
-
-		setCenterDiameter(next);
-		setPendingScale(entry);
-		setResponseGiven(false);
-		setAllowResponse(true);
-		setAllowScaleDown(false);
-		setAllowScaleUp(false);
+		if (next !== centerDiameter) setCenterDiameter(next);
+		setTrialResponses([]);
 	};
 
-	const handleResponse = (response: 'I can see' | 'I can’t see') => {
-		const entry = pendingScale ?? {
+	const handleResponse = (response: ResponseOption) => {
+		const prevDiameter = prevDiameterRef.current;
+		let scaleMethod: ScaleMethod = 'same';
+		if (centerDiameter > prevDiameter) scaleMethod = 'increase';
+		else if (centerDiameter < prevDiameter) scaleMethod = 'decrease';
+
+		const logmar = calculateLogMAR(centerDiameter, config.viewingDistanceCm);
+
+		const entry: IScaleLogEntry = {
 			timestamp: Date.now(),
 			outerDiameter: centerDiameter,
 			innerDiameter: centerDiameter * config.ratio,
 			ratio: config.ratio,
-			scaleDirection: 'Down',
-			logmar: calculateLogMAR(centerDiameter, config.viewingDistanceCm),
+			scaleMethod,
+			logmar,
+			userResponse: response,
 		};
 
-		setLogEntries((prev) => [...prev, { ...entry, userResponse: response }]);
-		setPendingScale(null);
-		setResponseGiven(true);
-		setAllowResponse(false);
+		prevDiameterRef.current = centerDiameter;
 
-		if (!initialResponseGiven) {
-			setInitialResponseGiven(true);
+		setLogEntries((prev) => [...prev, entry]);
+		setAllowResponse(true);
+		if (!initialResponseGiven) setInitialResponseGiven(true);
+
+		const updated: ResponseOption[] = [...trialResponses, response];
+		setTrialResponses(updated);
+
+		if (centerDiameter <= 1) {
+			setGameOverMessage('Assessment Over: Minimum visible size (1 mm) reached.');
+			return;
 		}
 
-		if (response === 'I can’t see') {
-			if (centerDiameter === config.maxHoleSize) {
-				setGameOverMessage('Assessment Over: User cannot see at maximum size.');
-				setAllowScaleDown(false);
-				setAllowScaleUp(false);
+		if (phase === 'quickSearch') {
+			if (response === "I can't see") {
+				if (centerDiameter === config.maxHoleSize) {
+					setGameOverMessage('Assessment Over: User cannot see even at maximum size.');
+				} else {
+					setPhase('bestline');
+					autoScale('increase');
+				}
 			} else {
-				setAllowScaleDown(false);
-				setAllowScaleUp(true);
+				autoScale('decrease');
 			}
-		}
+		} else if (phase === 'bestline') {
+			const updated = [...trialResponses, response];
+			setTrialResponses(updated);
 
-		if (response === 'I can see') {
-			if (centerDiameter === config.minHoleSize) {
-				setGameOverMessage('Assessment Over: User can see at minimum size.');
-				setAllowScaleDown(false);
-				setAllowScaleUp(false);
+			const cantSee = updated.filter((r) => r === "I can't see").length;
+			const canSee = updated.filter((r) => r === 'I can see').length;
+
+			// Early jump if 2 mistakes before confirming baseline
+			if (cantSee >= 2 && canSee < 3) {
+				autoScale('increase'); // Jump one level up
+				setTrialResponses([]); // Start over
+				return;
+			}
+
+			// Confirmed bestline if 3 correct
+			if (canSee >= 3 && !bestlineFound) {
+				setBestlineFound(true);
+			}
+
+			// Once baseline confirmed, wait until 5 total to move on
+			if (bestlineFound && updated.length >= 5) {
+				setPhase('counting');
+				autoScale('decrease');
+				setTrialResponses([]);
+				return;
+			}
+
+			// Otherwise, continue collecting trials
+			setAllowResponse(true);
+		} else if (phase === 'counting') {
+			const updated = [...trialResponses, response];
+			setTrialResponses(updated);
+
+			if (updated.length < 5) {
+				setAllowResponse(true);
+				return;
+			}
+
+			const cantSee = updated.filter((r) => r === "I can't see").length;
+
+			if (cantSee === 5 || centerDiameter <= 1 || centerDiameter === config.minHoleSize) {
+				setGameOverMessage('Assessment Over: Minimum visible size (1 mm) reached.');
 			} else {
-				setAllowScaleDown(true);
-				setAllowScaleUp(false);
+				autoScale('decrease');
+				setTrialResponses([]); // Reset for next 5-trial set
 			}
 		}
 	};
@@ -141,40 +169,65 @@ export const VisualAcuityScaleGameBoard = ({ config, onExit }: IProps) => {
 	const centerRow = Math.floor(rows / 2);
 	const centerCol = Math.floor(cols / 2);
 
+	const scaledHoleSize = getScaledMm(config.holeSize);
+	const scaledGap = getScaledMm(config.holeGap);
+	const cellSizePx = mmToPx(scaledHoleSize + scaledGap);
+
+	const centerOuterMm = getScaledMm(centerDiameter);
+	const centerInnerMm = centerOuterMm * config.ratio;
+	const baseOuterMm = scaledHoleSize;
+	const baseInnerMm = baseOuterMm * config.ratio;
+
 	return (
 		<div className='w-full h-screen relative'>
-			{/* Log Toggle Button */}
 			<div className='fixed top-4 left-4 z-50'>
 				<button title='Toggle Scale Log' onClick={() => setLogPanelOpen((v) => !v)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
 					{logPanelOpen ? <X className='w-5 h-5' /> : <FileText className='w-5 h-5' />}
 				</button>
 			</div>
 
-			{/* Exit Button - top right with 24px inward offset */}
-			<div className='fixed top-4 right-[72px] z-50'>
+			<div className='absolute top-4 right-16 z-20 flex gap-2'>
+				{/* Home Button */}
 				<button onClick={onExit} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' title='Exit to Home'>
 					<Home className='w-5 h-5' />
 				</button>
+
+				{/* Reset Button */}
+				<button
+					onClick={() => {
+						setCenterDiameter(config.holeSize);
+						setLogEntries([]);
+						setAllowResponse(true);
+						setInitialResponseGiven(false);
+						setGameOverMessage(null);
+						setPhase('quickSearch');
+						setTrialResponses([]);
+						setBestlineFound(false);
+						prevDiameterRef.current = config.holeSize;
+						updateGridSize();
+					}}
+					className='bg-white p-2 rounded-full shadow hover:bg-gray-100'
+					title='Reset Game'>
+					<RotateCcw className='w-5 h-5' />
+				</button>
 			</div>
 
-			{/* Log Panel */}
 			{logPanelOpen && <VAScaleLogPanel logEntries={logEntries} />}
 
-			{/* Main Display */}
 			<div className='w-full h-full flex flex-col items-center justify-center' style={{ backgroundColor: config.bgColor, paddingLeft: logPanelOpen ? '320px' : '0' }}>
 				<div
 					className='grid'
 					style={{
 						gridTemplateColumns: `repeat(${cols}, ${cellSizePx}px)`,
 						gridTemplateRows: `repeat(${rows}, ${cellSizePx}px)`,
-						gap: `${mmToPx(config.holeGap)}px`,
+						gap: `${mmToPx(scaledGap)}px`,
 					}}>
 					{Array.from({ length: rows * cols }).map((_, i) => {
 						const row = Math.floor(i / cols);
 						const col = i % cols;
 						const isCenter = row === centerRow && col === centerCol;
-						const outerMm = isCenter ? centerDiameter : config.holeSize;
-						const innerMm = outerMm * config.ratio;
+						const outerMm = isCenter ? centerOuterMm : baseOuterMm;
+						const innerMm = isCenter ? centerInnerMm : baseInnerMm;
 
 						return (
 							<div key={i} className='flex items-center justify-center' style={{ width: cellSizePx, height: cellSizePx }}>
@@ -199,32 +252,22 @@ export const VisualAcuityScaleGameBoard = ({ config, onExit }: IProps) => {
 					})}
 				</div>
 
-				{/* Controls */}
-				<div className='absolute bottom-4 flex items-center gap-4'>
-					<div className='flex gap-2'>
-						<button disabled={!allowScaleDown} onClick={() => handleScale('Down')} className='flex items-center gap-1 p-2 rounded bg-white shadow border hover:bg-gray-200 disabled:opacity-50'>
-							<ArrowDown size={16} />
-							<span className='text-sm'>Decrease</span>
+				{!gameOverMessage && (
+					<div className='absolute bottom-4 flex items-center gap-4'>
+						<button disabled={!allowResponse} onClick={() => handleResponse('I can see')} className='px-6 py-3 bg-green-600 text-white text-lg font-semibold rounded shadow disabled:opacity-50 disabled:cursor-not-allowed'>
+							I can see{(phase === 'bestline' || phase === 'counting') && ` (${trialResponses.length + 1}/5)`}
 						</button>
-						<button disabled={!allowScaleUp} onClick={() => handleScale('Up')} className='flex items-center gap-1 p-2 rounded bg-white shadow border hover:bg-gray-200 disabled:opacity-50'>
-							<ArrowUp size={16} />
-							<span className='text-sm'>Increase</span>
+
+						<button disabled={!allowResponse} onClick={() => handleResponse("I can't see")} className='px-6 py-3 bg-red-600 text-white text-lg font-semibold rounded shadow disabled:opacity-50 disabled:cursor-not-allowed'>
+							I can’t see{(phase === 'bestline' || phase === 'counting') && ` (${trialResponses.length + 1}/5)`}
 						</button>
+						{bestlineFound && !gameOverMessage && (
+							<button onClick={() => setGameOverMessage('Assessment ended by user.')} className='px-6 py-3 bg-gray-500 text-white text-lg font-semibold rounded shadow hover:bg-gray-600'>
+								I Give Up
+							</button>
+						)}
 					</div>
-
-					{!gameOverMessage && (
-						<div className='flex gap-2'>
-							<button disabled={!allowResponse} onClick={() => handleResponse('I can see')} className='p-2 bg-green-300 rounded shadow disabled:opacity-50'>
-								I can see
-							</button>
-							<button disabled={!allowResponse} onClick={() => handleResponse('I can’t see')} className='p-2 bg-red-300 rounded shadow disabled:opacity-50'>
-								I can’t see
-							</button>
-						</div>
-					)}
-				</div>
-
-				{/* Game Over Message */}
+				)}
 				{gameOverMessage && <div className='absolute bottom-20 text-sm font-semibold text-center text-red-600 px-4'>{gameOverMessage}</div>}
 			</div>
 		</div>

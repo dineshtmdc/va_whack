@@ -12,7 +12,7 @@ export const VAScaleRoute = ({ user }: { user: IUserDetails }) => {
 		holeSize: 30,
 		minHoleSize: 1,
 		maxHoleSize: 30,
-		holeGap: 4,
+		holeGap: 2,
 		ratio: 0.5,
 		innerColor: '#ffffff',
 		outerColor: '#666666',

@@ -8,3 +8,5 @@ export * from './zustand/engagement_game_session_store';
 export * from './zustand/visual_acuity_game_session_store';
 
 export * from './services/api-service';
+
+export * from './types/game_data.types';
