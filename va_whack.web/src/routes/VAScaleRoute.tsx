@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { IUserDetails, IVAScaleGameConfig } from '../shared';
-import { VAScalingControlPanel, VisualAcuityScaleGameBoard } from '../components';
+import { VAScaleControlPanel, VAScaleGameBoard } from '../components';
 
 export const VAScaleRoute = ({ user }: { user: IUserDetails }) => {
 	const navigate = useNavigate();
@@ -24,8 +24,8 @@ export const VAScaleRoute = ({ user }: { user: IUserDetails }) => {
 
 	return (
 		<>
-			<VAScalingControlPanel config={config} onChange={(u) => setConfig((p) => ({ ...p, ...u }))} />
-			<VisualAcuityScaleGameBoard config={config} user={user} onExit={() => navigate('/game-selector')} />
+			<VAScaleControlPanel config={config} onChange={(u) => setConfig((p) => ({ ...p, ...u }))} />
+			<VAScaleGameBoard config={config} user={user} onExit={() => navigate('/game-selector')} />
 		</>
 	);
 };

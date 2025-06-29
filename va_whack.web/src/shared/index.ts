@@ -1,12 +1,22 @@
 /** @format */
 
+// Interfaces
 export * from './interfaces/player_data.interface';
-export * from './interfaces/game_types.interface';
+export * from './interfaces/engagement.interface';
+export * from './interfaces/va_scale.interface';
 export * from './interfaces/auth.interface';
+export * from './interfaces/game_history.interface';
 
-export * from './zustand/engagement_game_session_store';
-export * from './zustand/visual_acuity_game_session_store';
+// Zuztand Stores
+export * from './zustand/engagement_game_store';
+export * from './zustand/va_scale_game_store';
 
-export * from './services/api-service';
+// Services
+export * from './services/auth-service';
+export * from './services/games-service';
 
+// Types
 export * from './types/game_data.types';
+
+// Utils
+export * from './utils/api-client.util';

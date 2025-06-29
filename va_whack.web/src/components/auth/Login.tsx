@@ -1,9 +1,10 @@
 /** @format */
 
 import { useState, useMemo } from 'react';
-import { getAuthToken, registerPlayer, requestLoginPin, verifyPlayerPin } from '../shared';
-import { useAuth } from '../auth/useAuth';
+
+import { useAuth } from '../../auth/useAuth';
 import { MousePointerClick, Rabbit, Eye, Circle, Mouse, Rat, EyeClosed, EyeOff, Brain, LoaderCircle } from 'lucide-react'; // Using Circle = 'C', Eye = 'E'
+import { AuthService } from '../../shared';
 
 export const Login = () => {
 	const { login } = useAuth();
@@ -86,10 +87,10 @@ export const Login = () => {
 					setErrorMessage(t.fillFields);
 					return;
 				}
-				await registerPlayer(name, email, ageGroup);
+				await AuthService.registerPlayer(name, email, ageGroup);
 				alert(t.registrationSuccess);
 			} else {
-				await requestLoginPin(email);
+				await AuthService.requestLoginPin(email);
 				alert(t.loginPinSent);
 			}
 			setPinRequested(true);
@@ -115,10 +116,10 @@ export const Login = () => {
 			let finalAgeGroup = ageGroup;
 
 			if (playerType === 'new') {
-				const response = await verifyPlayerPin(email, pin);
+				const response = await AuthService.verifyPlayerPin(email, pin);
 				token = response.data.access_token;
 			} else {
-				const response = await getAuthToken(email, pin);
+				const response = await AuthService.getAuthToken(email, pin);
 				token = response.data.access_token;
 				finalName = t.existingPlayer;
 				finalAgeGroup = '';

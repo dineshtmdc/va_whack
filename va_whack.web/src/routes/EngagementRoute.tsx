@@ -13,9 +13,9 @@ export const EngagementRoute = ({ user }: { user: IUserDetails }) => {
 		holeSize: 64,
 		holeGap: 4,
 		mouseCount: 1,
-		spawnInterval: 2000,
-		holeColor: '#2d2d2d',
-		bgColor: '#15803d',
+		spawnInterval: 1500,
+		holeColor: '#666666',
+		bgColor: '#f0f0f0',
 	});
 
 	return (

@@ -2,10 +2,9 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Login, GameSelector, FullscreenHandler } from '.';
-
 import { ProtectedRoute } from '../routes/ProtectedRoute';
 import { useAuth } from '../auth/useAuth';
-import { EngagementRoute, VAFastRoute, VAScaleRoute } from '../routes';
+import { EngagementRoute, VAFastRoute, VAScaleRoute, ProfileRoute } from '../routes';
 
 export const App = () => {
 	const { user } = useAuth();
@@ -30,6 +29,16 @@ export const App = () => {
 					<Route path='va-fast' element={<VAFastRoute user={user!} />} />
 					<Route path='va-scale' element={<VAScaleRoute user={user!} />} />
 				</Route>
+
+				{/* Profile route */}
+				<Route
+					path='/profile'
+					element={
+						<ProtectedRoute>
+							<ProfileRoute user={user!} />
+						</ProtectedRoute>
+					}
+				/>
 
 				{/* Fallback redirect */}
 				<Route path='*' element={<Navigate to={user ? '/game-selector' : '/login'} replace />} />

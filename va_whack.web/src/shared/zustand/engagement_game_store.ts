@@ -6,14 +6,16 @@ import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
-import type { IAppearanceEvent, IEnagementGameConfig, IEnagementGameSession, IUserDetails } from '..';
+
+import type { IAppearanceEvent, IEnagementGameConfig, IEnagementGameSession, IEnagementScoreSummary } from '..';
 
 interface EnagementGameSessionState {
 	currentSession: IEnagementGameSession | null;
 	sessionHistory: IEnagementGameSession[];
-	startSession: (user: IUserDetails, config: IEnagementGameConfig) => void;
+	startSession: (email: string, config: IEnagementGameConfig) => void;
 	addEvents: (newEvents: IAppearanceEvent[]) => void;
 	updateEventById: (id: number, update: Partial<IAppearanceEvent>) => void;
+	setScores: (scores: IEnagementScoreSummary) => void;
 	endSession: () => void;
 	resetCurrentSession: () => void;
 	clearAllSessions: () => void;
@@ -27,26 +29,31 @@ export const useEnagementGameSessionStore = create<EnagementGameSessionState>()(
 					currentSession: null,
 					sessionHistory: [],
 
-					startSession: (user: IUserDetails, config: IEnagementGameConfig) =>
+					startSession: (email, config) =>
 						set(() => ({
 							currentSession: {
 								gameId: uuidv4(),
-								user,
+								email,
 								config,
 								events: [],
 								startTime: Date.now(),
+								scores: {
+									totalTrials: 0,
+									totalMoleTrials: 0,
+									totalRabbitTrials: 0,
+								},
 							},
 						})),
 
-					addEvents: (newEvents: IAppearanceEvent[]) =>
-						set((state: EnagementGameSessionState) => {
+					addEvents: (newEvents) =>
+						set((state) => {
 							if (state.currentSession) {
 								state.currentSession.events.push(...newEvents);
 							}
 						}),
 
-					updateEventById: (id: number, update: Partial<IAppearanceEvent>) =>
-						set((state: EnagementGameSessionState) => {
+					updateEventById: (id, update) =>
+						set((state) => {
 							if (state.currentSession) {
 								const index = state.currentSession.events.findIndex((e) => e.id === id);
 								if (index !== -1) {
@@ -55,8 +62,15 @@ export const useEnagementGameSessionStore = create<EnagementGameSessionState>()(
 							}
 						}),
 
+					setScores: (scores) =>
+						set((state) => {
+							if (state.currentSession) {
+								state.currentSession.scores = scores;
+							}
+						}),
+
 					endSession: () =>
-						set((state: EnagementGameSessionState) => {
+						set((state) => {
 							if (state.currentSession) {
 								state.currentSession.endTime = Date.now();
 								state.sessionHistory.push({ ...state.currentSession });

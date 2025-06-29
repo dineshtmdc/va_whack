@@ -1,6 +1,6 @@
 /** @format */
 
-import type { IUserDetails, ResponseOption, ScaleMethod } from '..';
+import type { IUserDetails } from '..';
 
 export interface IMole {
 	id: number;
@@ -26,6 +26,7 @@ export interface IEnagementGameSession {
 	events: IAppearanceEvent[];
 	startTime: number; // optional: for session tracking
 	endTime?: number;
+	scores: IEnagementScoreSummary;
 }
 
 export interface IAppearanceEvent {
@@ -47,37 +48,6 @@ export interface IAppearanceEvent {
 	wasDistractorClicked?: boolean; // true if targetType==='rabbit' and user clicked
 }
 
-// End-of-session summary interface
-export interface IEnagementScoreSummary {
-	SS1_detectionSpeed?: number; // in ms
-	SS2_detectionAccuracy?: number; // in px
-	SS3_spatialUniformity?: number; // 0–100
-	SS4_sensitivityThreshold?: number; // 0–100
-	VAfinal?: number; // logMAR
-
-	SS5_falsePositiveRate?: number; // percentage
-	SS6_missRate?: number; // percentage
-	SS7_clickValidity?: number; // percentage
-	SS8_trialConsistency?: number; // sum of std devs
-	SS9_maxHitStreak?: number; // count
-
-	SS10_coordinationProxy?: number; // 0–100
-	SS11_targetDiscrimination?: number; // percentage
-
-	totalTrials: number;
-	totalMoleTrials: number;
-	totalRabbitTrials: number;
-}
-
-export interface IVAGameSession {
-	gameId: string;
-	user: IUserDetails;
-	config: IEnagementGameConfig;
-	events: IAppearanceEvent[];
-	startTime: number; // optional: for session tracking
-	endTime?: number;
-}
-
 export interface IVAMovingGameConfig {
 	moveSpeed?: number; // deg/s
 	moveDirection?: 'left-to-right' | 'right-to-left';
@@ -93,26 +63,32 @@ export interface IVAMovingGameConfig {
 	bgColor: string;
 }
 
-export interface IVAScaleGameConfig {
-	holeSize: number;
-	minHoleSize: number;
-	maxHoleSize: number;
-	ratio: number;
-	innerColor: string;
-	outerColor: string;
-	bgColor: string;
-	holeGap: number;
-	verticalPadding: number;
-	horizontalPadding: number;
-	viewingDistanceCm: number;
+// End-of-session summary interface
+export interface IEnagementScoreSummary {
+	SS1_detectionSpeed?: number; // in ms
+	SS2_detectionAccuracy?: number; // in px
+	SS3_spatialUniformity?: number; // 0–100
+	SS4_sensitivityThreshold?: number; // 0–100
+	SS5_falsePositiveRate?: number; // percentage
+	SS6_missRate?: number; // percentage
+	SS7_clickValidity?: number; // percentage
+	SS8_trialConsistency?: number; // sum of std devs
+	SS9_maxHitStreak?: number; // count
+	SS10_coordinationProxy?: number; // 0–100
+	SS11_targetDiscrimination?: number; // percentage
+
+	VAfinal?: number; // logMAR
+
+	totalTrials: number;
+	totalMoleTrials: number;
+	totalRabbitTrials: number;
 }
 
-export interface IScaleLogEntry {
-	timestamp: number;
-	outerDiameter: number;
-	innerDiameter: number;
-	ratio: number;
-	scaleMethod: ScaleMethod;
-	logmar: number;
-	userResponse?: ResponseOption;
+export interface IVAGameSession {
+	gameId: string;
+	user: IUserDetails;
+	config: IEnagementGameConfig;
+	events: IAppearanceEvent[];
+	startTime: number; // optional: for session tracking
+	endTime?: number;
 }

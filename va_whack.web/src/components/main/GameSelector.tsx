@@ -1,20 +1,26 @@
 /** @format */
 
-import { Outlet, useLocation } from 'react-router-dom';
-import type { IUserDetails } from '../shared';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import type { IUserDetails } from '../../shared';
 import { GameTile } from './GameTile';
-import { Eye, MousePointerClick, ZoomIn } from 'lucide-react';
+import { Eye, MousePointerClick, ZoomIn, User } from 'lucide-react';
 
 export const GameSelector = ({ user }: { user: IUserDetails }) => {
 	const location = useLocation();
+	const navigate = useNavigate();
 
-	// If the route is a sub-route, render the nested game via <Outlet />
+	// If not at the root selector route, render nested routes
 	if (location.pathname !== '/game-selector') {
 		return <Outlet />;
 	}
 
 	return (
-		<div className='min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-green-100 to-blue-100 space-y-6'>
+		<div className='relative min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-green-100 to-blue-100 space-y-6'>
+			{/* Profile icon top-right */}
+			<button onClick={() => navigate('/profile')} className='absolute top-4 right-4 p-2 bg-white rounded-full shadow hover:bg-gray-100' aria-label='Go to profile'>
+				<User className='w-6 h-6 text-gray-700' />
+			</button>
+
 			<h1 className='text-4xl font-bold text-gray-900'>Vision Science - Visual Acuity Assessment</h1>
 			<h2 className='text-2xl font-semibold text-gray-800'>Welcome {user.name || user.email}</h2>
 			<p className='text-lg text-gray-600'>Choose your assessment mode to begin.</p>

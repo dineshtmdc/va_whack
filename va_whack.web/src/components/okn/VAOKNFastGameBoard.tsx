@@ -1,9 +1,9 @@
 /** @format */
 
 import { useEffect, useRef, useState } from 'react';
-import { useVAGameSessionStore, type IUserDetails, type IVAMovingGameConfig } from '../shared';
-import { GameSessionInfo } from '.';
-import { BarChart, RotateCcw, Home } from 'lucide-react';
+import { type IUserDetails, type IVAMovingGameConfig } from '../../shared';
+import { EnagementGameStatistics } from '..';
+import { RotateCcw, Home } from 'lucide-react';
 
 interface IProps {
 	config: IVAMovingGameConfig;
@@ -56,15 +56,15 @@ const grayscaleFromIntensity = (intensity: number = 1): string => {
 	return `rgb(${v}, ${v}, ${v})`;
 };
 
-export const VisualAcuityentMovingGameBoard = ({ config, user, onExit }: IProps) => {
+export const VAOKNFastGameBoard = ({ config, onExit }: IProps) => {
 	const [gridOffset, setGridOffset] = useState(0);
 	const [rows, setRows] = useState(0);
 	const [cols, setCols] = useState(0);
 	const [ppi, setPPI] = useState<number>(96);
 	const [showStatsDialog, setShowStatsDialog] = useState(false);
+	const [isHoveringControlsRight, setHoveringControlsRight] = useState(false);
 
 	const requestRef = useRef<number | null>(null);
-	const { startSession, resetCurrentSession } = useVAGameSessionStore();
 
 	useEffect(() => {
 		setPPI(detectScreenPPI());
@@ -93,10 +93,6 @@ export const VisualAcuityentMovingGameBoard = ({ config, user, onExit }: IProps)
 	}, [MARGIN_TOP, cellSize]);
 
 	useEffect(() => {
-		startSession(user, config);
-	}, [user, config, startSession]);
-
-	useEffect(() => {
 		let lastTime: number | null = null;
 		const animate = (time: number) => {
 			if (!lastTime) lastTime = time;
@@ -117,10 +113,7 @@ export const VisualAcuityentMovingGameBoard = ({ config, user, onExit }: IProps)
 		};
 	}, [direction, pixelSpeed, cellSize]);
 
-	const resetGame = () => {
-		resetCurrentSession();
-		startSession(user, config);
-	};
+	const resetGame = () => {};
 
 	// Clamp all intensity values
 	const surroundIntensity = Math.max(0, Math.min(1, config.surroundIntensity ?? 1));
@@ -139,16 +132,17 @@ export const VisualAcuityentMovingGameBoard = ({ config, user, onExit }: IProps)
 				backgroundColor: bgColor,
 			}}>
 			{/* Top Buttons */}
-			<div className='absolute top-4 right-16 z-20 flex gap-2'>
+
+			<div className={`absolute top-4 right-16 z-20 flex gap-2 transition-opacity duration-300 ${isHoveringControlsRight ? 'opacity-100' : 'opacity-0'}`} onMouseEnter={() => setHoveringControlsRight(true)} onMouseLeave={() => setHoveringControlsRight(false)}>
 				<button onClick={onExit} title='Back to Selector' className='bg-white text-black p-2 rounded-full shadow hover:bg-gray-200'>
 					<Home className='w-5 h-5' />
 				</button>
 				<button onClick={resetGame} title='Restart' className='bg-white text-black p-2 rounded-full shadow hover:bg-gray-200'>
 					<RotateCcw className='w-5 h-5' />
 				</button>
-				<button onClick={() => setShowStatsDialog(true)} title='View Stats' className='bg-white text-black p-2 rounded-full shadow hover:bg-gray-200'>
+				{/* <button onClick={() => setShowStatsDialog(true)} title='View Stats' className='bg-white text-black p-2 rounded-full shadow hover:bg-gray-200'>
 					<BarChart className='w-5 h-5' />
-				</button>
+				</button> */}
 			</div>
 
 			{/* Debug Info */}
@@ -193,7 +187,7 @@ export const VisualAcuityentMovingGameBoard = ({ config, user, onExit }: IProps)
 			</div>
 
 			{/* Stats Modal */}
-			<GameSessionInfo isOpen={showStatsDialog} onClose={() => setShowStatsDialog(false)} />
+			<EnagementGameStatistics isOpen={showStatsDialog} onClose={() => setShowStatsDialog(false)} />
 		</div>
 	);
 };

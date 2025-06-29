@@ -2,15 +2,16 @@
 
 import { useState } from 'react';
 import { Settings, X } from 'lucide-react';
-import type { IVAScaleGameConfig } from '../shared';
+import type { IVAScaleGameConfig } from '../../shared';
 
 interface IProps {
 	config: IVAScaleGameConfig;
 	onChange: (updates: Partial<IVAScaleGameConfig>) => void;
 }
 
-export const VAScalingControlPanel = ({ config, onChange }: IProps) => {
+export const VAScaleControlPanel = ({ config, onChange }: IProps) => {
 	const [open, setOpen] = useState(false);
+	const [isHoveringIcon, setIsHoveringIcon] = useState(false);
 
 	const computeSizeFromLogMAR = (logmar: number, viewingDistanceCm: number): number => {
 		const distanceMm = viewingDistanceCm * 10;
@@ -45,10 +46,12 @@ export const VAScalingControlPanel = ({ config, onChange }: IProps) => {
 	return (
 		<>
 			{/* Gear Icon */}
-			<div className='absolute top-4 right-4 z-50'>
-				<button onClick={() => setOpen((o) => !o)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' aria-label='Toggle Control Panel'>
-					{open ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
-				</button>
+			<div className='absolute top-0 right-0 w-16 h-16 z-40' onMouseEnter={() => setIsHoveringIcon(true)} onMouseLeave={() => setIsHoveringIcon(false)}>
+				<div className={`absolute top-4 right-4 transition-opacity duration-300 ${isHoveringIcon ? 'opacity-100' : 'opacity-0'}`}>
+					<button onClick={() => setOpen((o) => !o)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' aria-label='Toggle Control Panel'>
+						{open ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
+					</button>
+				</div>
 			</div>
 
 			{/* Control Panel */}
