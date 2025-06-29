@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { IUserDetails, IVAMovingGameConfig } from '../shared';
-import { VAMovingControlPanel, VisualAcuityentMovingGameBoard } from '../components';
+import { VAOKNFastControlPanel, VAOKNFastGameBoard } from '../components';
 
 export const VAFastRoute = ({ user }: { user: IUserDetails }) => {
 	const navigate = useNavigate();
@@ -25,8 +25,8 @@ export const VAFastRoute = ({ user }: { user: IUserDetails }) => {
 
 	return (
 		<>
-			<VAMovingControlPanel config={config} onChange={(u) => setConfig((p) => ({ ...p, ...u }))} />
-			<VisualAcuityentMovingGameBoard config={config} user={user} onExit={() => navigate('/game-selector')} />
+			<VAOKNFastControlPanel config={config} onChange={(u) => setConfig((p) => ({ ...p, ...u }))} />
+			<VAOKNFastGameBoard config={config} user={user} onExit={() => navigate('/game-selector')} />
 		</>
 	);
 };

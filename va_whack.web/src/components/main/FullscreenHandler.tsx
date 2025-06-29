@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useEffect } from 'react';
-import { useAuth } from '../auth/useAuth';
+import { useAuth } from '../../auth/useAuth';
 
 export const FullscreenHandler = () => {
 	const { user } = useAuth();

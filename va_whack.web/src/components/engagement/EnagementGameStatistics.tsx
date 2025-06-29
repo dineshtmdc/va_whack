@@ -2,9 +2,9 @@
 
 import { Dialog, DialogTitle } from '@headlessui/react';
 import { useState } from 'react';
-import { useEnagementGameSessionStore } from '../shared'; // Adjust path if needed
+import { useEnagementGameSessionStore } from '../../shared';
 
-interface GameSessionInfoProps {
+interface IProps {
 	isOpen: boolean;
 	onClose: () => void;
 }
@@ -16,7 +16,7 @@ const formatTimeWithMs = (timestamp: number) => {
 	return `${time}.${ms}`; // HH:MM:SS.sss
 };
 
-export const GameSessionInfo = ({ isOpen, onClose }: GameSessionInfoProps) => {
+export const EnagementGameStatistics = ({ isOpen, onClose }: IProps) => {
 	const [selectedTab, setSelectedTab] = useState(0);
 	const sessionHistory = useEnagementGameSessionStore((state) => state.sessionHistory);
 

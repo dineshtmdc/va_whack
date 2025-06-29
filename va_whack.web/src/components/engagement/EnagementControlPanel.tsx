@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Settings, X } from 'lucide-react';
-import type { IEnagementGameConfig } from '../shared';
+import type { IEnagementGameConfig } from '../../shared';
 
 interface EnagementControlPanelProps {
 	config: IEnagementGameConfig;
@@ -11,6 +11,7 @@ interface EnagementControlPanelProps {
 
 export const EnagementControlPanel = ({ config, onChange }: EnagementControlPanelProps) => {
 	const [open, setOpen] = useState(false);
+	const [isHoveringSettings, setIsHoveringSettings] = useState(false);
 
 	const handleChange = (key: keyof IEnagementGameConfig, value: string | number) => {
 		let parsedValue: number | string = typeof value === 'string' && /^\d+$/.test(value) ? parseInt(value) : value;
@@ -24,10 +25,12 @@ export const EnagementControlPanel = ({ config, onChange }: EnagementControlPane
 
 	return (
 		<>
-			<div className='absolute top-4 right-4 z-50'>
-				<button onClick={() => setOpen((o) => !o)} className='bg-white p-2 rounded shadow hover:bg-gray-100' aria-label='Toggle Control Panel'>
-					{open ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
-				</button>
+			<div className='absolute top-0 right-0 w-16 h-16 z-40' onMouseEnter={() => setIsHoveringSettings(true)} onMouseLeave={() => setIsHoveringSettings(false)}>
+				<div className={`absolute top-4 right-4 transition-opacity duration-300 ${isHoveringSettings ? 'opacity-100' : 'opacity-0'}`}>
+					<button onClick={() => setOpen((o) => !o)} className='bg-white p-2 rounded shadow hover:bg-gray-100' aria-label='Toggle Control Panel'>
+						{open ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
+					</button>
+				</div>
 			</div>
 
 			{open && (

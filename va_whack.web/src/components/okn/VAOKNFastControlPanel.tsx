@@ -2,15 +2,16 @@
 
 import { useState } from 'react';
 import { Settings, X } from 'lucide-react';
-import type { IVAMovingGameConfig } from '../shared';
+import type { IVAMovingGameConfig } from '../../shared';
 
 interface Props {
 	config: IVAMovingGameConfig;
 	onChange: (updates: Partial<IVAMovingGameConfig>) => void;
 }
 
-export const VAMovingControlPanel = ({ config, onChange }: Props) => {
+export const VAOKNFastControlPanel = ({ config, onChange }: Props) => {
 	const [open, setOpen] = useState(false);
+	const [isHoveringIcon, setIsHoveringIcon] = useState(false);
 
 	const handleChange = (key: keyof IVAMovingGameConfig, value: string | number) => {
 		const parsed = typeof value === 'string' && /^\d+(\.\d+)?$/.test(value) ? parseFloat(value) : value;
@@ -21,10 +22,12 @@ export const VAMovingControlPanel = ({ config, onChange }: Props) => {
 		<>
 			{/* Gear Icon */}
 
-			<div className='absolute top-4 right-4 z-50'>
-				<button onClick={() => setOpen((o) => !o)} className='bg-white p-2 rounded shadow hover:bg-gray-100' aria-label='Toggle Control Panel'>
-					{open ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
-				</button>
+			<div className='absolute top-0 right-0 w-16 h-16 z-40' onMouseEnter={() => setIsHoveringIcon(true)} onMouseLeave={() => setIsHoveringIcon(false)}>
+				<div className={`absolute top-4 right-4 transition-opacity duration-300 ${isHoveringIcon ? 'opacity-100' : 'opacity-0'}`}>
+					<button onClick={() => setOpen((o) => !o)} className='bg-white p-2 rounded shadow hover:bg-gray-100' aria-label='Toggle Control Panel'>
+						{open ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
+					</button>
+				</div>
 			</div>
 
 			{/* Floating Panel with Scroll */}

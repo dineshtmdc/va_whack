@@ -1,9 +1,9 @@
 /** @format */
 
 import { useEffect, useRef, useState } from 'react';
-import hammerCursor from '../assets/hammer.jpg';
-import { useEnagementGameSessionStore, type IAppearanceEvent, type IMole, type IUserDetails, type IEnagementGameConfig } from '../shared';
-import { Mole, GameSessionInfo } from '.';
+import hammerCursor from '../../assets/hammer.jpg';
+import { useEnagementGameSessionStore, type IAppearanceEvent, type IMole, type IUserDetails, type IEnagementGameConfig, GameService, type IEnagementScoreSummary } from '../../shared';
+import { Mole, EnagementGameStatistics } from '..';
 import { FakeMole } from './FakeMole';
 import { Home, RotateCcw, BarChart } from 'lucide-react';
 
@@ -26,9 +26,14 @@ export const EngagementGameBoard = ({ config, onExit, user }: IProps) => {
 	const [showStatsDialog, setShowStatsDialog] = useState(false);
 	const nextEventIdRef = useRef(1);
 	const { startSession, addEvents, updateEventById, endSession, resetCurrentSession } = useEnagementGameSessionStore();
+	const [isHoveringControls, setIsHoveringControls] = useState(false);
+	const [isHoveringHud, setIsHoveringHud] = useState(false);
+	const [score, setScore] = useState<IEnagementScoreSummary | null>(null);
+	const [scoreDialogOpen, setScoreDialogOpen] = useState(false);
+	const [scoreCalculated, setScoreCalculated] = useState(false);
 
 	useEffect(() => {
-		startSession(user, config);
+		startSession(user.email, config);
 	}, [user, config, startSession]);
 
 	useEffect(() => {
@@ -43,6 +48,15 @@ export const EngagementGameBoard = ({ config, onExit, user }: IProps) => {
 		window.addEventListener('resize', updateGridSize);
 		return () => window.removeEventListener('resize', updateGridSize);
 	}, [config.holeSize, config.holeGap]);
+
+	useEffect(() => {
+		const handleMouseMove = () => {
+			window.removeEventListener('mousemove', handleMouseMove); // only trigger once
+		};
+
+		window.addEventListener('mousemove', handleMouseMove);
+		return () => window.removeEventListener('mousemove', handleMouseMove);
+	}, []);
 
 	const getQuadrant = (row: number, col: number): 'Q1' | 'Q2' | 'Q3' | 'Q4' => {
 		const midRow = Math.floor(rows / 2);
@@ -117,6 +131,23 @@ export const EngagementGameBoard = ({ config, onExit, user }: IProps) => {
 		return () => clearInterval(timer);
 	}, [timeLeft]);
 
+	const handleCalculateScore = async () => {
+		const session = useEnagementGameSessionStore.getState().currentSession;
+
+		if (!session) {
+			console.warn('No current session to submit.');
+			return;
+		}
+
+		const result = await GameService.submitEnagementGame(session);
+
+		if (result) {
+			setScore(result);
+			setScoreDialogOpen(true);
+			setScoreCalculated(true);
+		}
+	};
+
 	const resetGame = () => {
 		resetCurrentSession();
 		setMice([]);
@@ -126,7 +157,7 @@ export const EngagementGameBoard = ({ config, onExit, user }: IProps) => {
 		setMissCount(0);
 		setGameOver(false);
 		setUserClickedThisCycle(false);
-		startSession(user, config);
+		startSession(user.email, config);
 	};
 
 	const formatTime = (sec: number) => {
@@ -150,7 +181,7 @@ export const EngagementGameBoard = ({ config, onExit, user }: IProps) => {
 				}
 			}}>
 			{/* Top-right Controls */}
-			<div className='absolute top-4 right-16 z-20 flex gap-2'>
+			<div className={`absolute top-4 right-16 z-20 flex gap-2 transition-opacity duration-300 ${isHoveringControls ? 'opacity-100' : 'opacity-0'}`} onMouseEnter={() => setIsHoveringControls(true)} onMouseLeave={() => setIsHoveringControls(false)}>
 				<button onClick={onExit} title='Back to Selector' className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
 					<Home className='w-5 h-5' />
 				</button>
@@ -163,12 +194,20 @@ export const EngagementGameBoard = ({ config, onExit, user }: IProps) => {
 			</div>
 
 			{/* HUD */}
-			<div className='absolute top-4 left-4 z-20 text-white text-lg flex items-center space-x-6'>
+			<div className={`absolute top-4 left-4 z-20 text-white text-lg flex items-center space-x-6 transition-opacity duration-300 ${isHoveringHud ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-auto'}`} onMouseEnter={() => setIsHoveringHud(true)} onMouseLeave={() => setIsHoveringHud(false)}>
 				<p>Time Left: {formatTime(timeLeft)}</p>
 				<p>Hits: {hitCount}</p>
 				<p>Misses: {missCount}</p>
 				{gameOver && <p className='text-red-400 font-bold'>Game Over</p>}
 			</div>
+
+			{gameOver && !scoreCalculated && (
+				<div className='absolute top-10 left-1/2 transform -translate-x-1/2 z-30'>
+					<button onClick={handleCalculateScore} className='bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded shadow'>
+						Calculate Score
+					</button>
+				</div>
+			)}
 
 			{/* Grid */}
 			<div
@@ -241,7 +280,27 @@ export const EngagementGameBoard = ({ config, onExit, user }: IProps) => {
 			</div>
 
 			{/* Stats Dialog */}
-			<GameSessionInfo isOpen={showStatsDialog} onClose={() => setShowStatsDialog(false)} />
+			<EnagementGameStatistics isOpen={showStatsDialog} onClose={() => setShowStatsDialog(false)} />
+
+			{scoreDialogOpen && score && (
+				<div className='fixed inset-0 bg-black/40 z-50 flex items-center justify-center'>
+					<div className='bg-white p-6 rounded-lg shadow-lg w-[360px] max-h-[90vh] overflow-y-auto'>
+						<h2 className='text-lg font-semibold mb-4 text-center'>Score Summary</h2>
+						<ul className='text-sm space-y-1'>
+							{Object.entries(score).map(([key, value]) => (
+								<li key={key}>
+									<strong>{key}:</strong> {typeof value === 'number' ? value.toFixed(2) : value}
+								</li>
+							))}
+						</ul>
+						<div className='mt-4 flex justify-center'>
+							<button onClick={() => setScoreDialogOpen(false)} className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>
+								Close
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 };
