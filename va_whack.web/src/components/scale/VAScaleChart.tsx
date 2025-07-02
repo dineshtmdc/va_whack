@@ -1,24 +1,30 @@
+/**
+ * eslint-disable @typescript-eslint/no-explicit-any
+ *
+ * @format
+ */
+
 /** @format */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5xy from '@amcharts/amcharts5/xy';
 import am5themes_Animated from '@amcharts/amcharts5/themes/Animated';
 import * as am5plugins_exporting from '@amcharts/amcharts5/plugins/exporting';
 
 import type { IScaleLogEntry, ResponseOption } from '../../shared';
-import { Maximize2, Minimize2 } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Rnd } from 'react-rnd';
 
 interface VAScaleChartProps {
 	logEntries: IScaleLogEntry[];
 	bestVA?: number;
 	finalVA?: number;
+	onClose: () => void;
 }
 
-export const VAScaleChart = ({ logEntries, bestVA, finalVA }: VAScaleChartProps) => {
+export const VAScaleChart = ({ logEntries, bestVA, finalVA, onClose }: VAScaleChartProps) => {
 	const chartRef = useRef<HTMLDivElement>(null);
-	const [fullscreen, setFullscreen] = useState(false);
 	const showChart = logEntries && logEntries.length > 0;
 
 	useEffect(() => {
@@ -36,10 +42,12 @@ export const VAScaleChart = ({ logEntries, bestVA, finalVA }: VAScaleChartProps)
 				layout: root.verticalLayout,
 			})
 		);
+
 		am5plugins_exporting.Exporting.new(root, {
 			filePrefix: 'scale_chart',
 			menu: am5plugins_exporting.ExportingMenu.new(root, {}),
 		});
+
 		const yAxis = chart.yAxes.push(
 			am5xy.ValueAxis.new(root, {
 				renderer: am5xy.AxisRendererY.new(root, { inversed: false }),
@@ -161,18 +169,14 @@ export const VAScaleChart = ({ logEntries, bestVA, finalVA }: VAScaleChartProps)
 		};
 	}, [logEntries, bestVA, finalVA, showChart]);
 
-	// --- Shared Chart Panel Layout ---
 	const chartPanel = (
 		<div className='flex flex-col w-full h-full bg-white'>
-			{/* Header */}
 			<div className='flex items-center justify-between px-4 py-3 border-b bg-gray-50'>
 				<h3 className='text-lg font-semibold'>Scale Fast Chart</h3>
-				<button className='text-gray-600 hover:text-black' onClick={() => setFullscreen((f) => !f)} title='Toggle Fullscreen'>
-					{fullscreen ? <Minimize2 className='w-5 h-5' /> : <Maximize2 className='w-5 h-5' />}
+				<button className='text-gray-600 hover:text-black' onClick={onClose} title='Close'>
+					<X className='w-5 h-5' />
 				</button>
 			</div>
-
-			{/* Chart Content */}
 			<div className='p-1 flex-1 overflow-auto'>
 				{showChart ? (
 					<div className='rounded border border-gray-300 h-full'>
@@ -184,11 +188,6 @@ export const VAScaleChart = ({ logEntries, bestVA, finalVA }: VAScaleChartProps)
 			</div>
 		</div>
 	);
-
-	// --- Render Either Resizable Panel or Fullscreen ---
-	if (fullscreen) {
-		return <div className='fixed inset-0 bg-white z-[9999] shadow-xl border'>{chartPanel}</div>;
-	}
 
 	return (
 		<Rnd default={{ x: 60, y: 55, width: 600, height: 600 }} minWidth={400} minHeight={300} bounds='window' className='z-[9999] bg-white rounded shadow-xl border overflow-hidden flex flex-col'>
