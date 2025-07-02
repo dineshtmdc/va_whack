@@ -224,6 +224,28 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	if (!gameStarted && (!gameOver || (scoreCalculated && scoreDialogAcknowledged))) {
 		return (
 			<div className='w-full h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100'>
+				{/* Controls */}
+				<div className='absolute top-4 right-4 z-20 flex items-center space-x-2'>
+					<button onClick={() => setIsControlsExpanded((prev) => !prev)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
+						{isControlsExpanded ? <ChevronRight className='w-5 h-5' /> : <ChevronLeft className='w-5 h-5' />}
+					</button>
+					{isControlsExpanded && (
+						<div className={`flex gap-2 ${isHoveringControls ? 'opacity-100' : 'opacity-80'}`} onMouseEnter={() => setIsHoveringControls(true)} onMouseLeave={() => setIsHoveringControls(false)}>
+							<button onClick={onExit} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' title='Back to Selector'>
+								<Home className='w-5 h-5' />
+							</button>
+							<button onClick={resetGame} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' title='Restart Game'>
+								<RotateCcw className='w-5 h-5' />
+							</button>
+							<button onClick={() => setShowStatsDialog(true)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' title='View Stats'>
+								<BarChart className='w-5 h-5' />
+							</button>
+							<button onClick={() => setShowControlPanel((prev) => !prev)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' title='Toggle Settings'>
+								{showControlPanel ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
+							</button>
+						</div>
+					)}
+				</div>
 				<h1 className='text-2xl font-bold mb-6'>Engagement Game</h1>
 				<div className='mb-4'>
 					<label className='mr-2 font-medium'>Select Difficulty:</label>
