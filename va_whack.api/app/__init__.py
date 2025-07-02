@@ -1,3 +1,2 @@
 
-# This file is intentionally left empty.
-# It tells Python that the 'app' directory should be treated as a package.
+# This file is intentionally left empty. It marks the 'app' directory as a Python package.

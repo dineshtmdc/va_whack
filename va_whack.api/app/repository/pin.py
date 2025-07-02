@@ -3,13 +3,13 @@
 # ==============================================================================
 
 from sqlalchemy.orm import Session
-import datetime
+from datetime import datetime
 from .. import models
 
 # ==============================================================================
 # Creates a new PIN record in the database.
 # ==============================================================================
-def create(db: Session, email: str, pin: str, expires_at: datetime.datetime):
+def create(db: Session, email: str, pin: str, expires_at: datetime):
     db_pin = models.PinNumber(email=email, pin=pin, expires_at=expires_at)
     db.add(db_pin)
     db.commit()

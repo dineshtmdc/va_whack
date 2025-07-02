@@ -1,2 +1,2 @@
-# This file is intentionally left empty.
-# It tells Python that the 'api' directory should be treated as a package.
+
+# This file is intentionally left empty. It marks the 'api' directory as a Python package.
