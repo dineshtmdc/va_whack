@@ -1,3 +1,8 @@
+/** ==============================================================================
+# FILE: va_whack.web\src\shared\interfaces\va_moving.interface.ts
+# ==============================================================================
+ */
+
 /** @format */
 
 export interface IVAMovingGameConfig {

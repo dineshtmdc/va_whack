@@ -3,8 +3,9 @@
 # Schemas are used for data validation, serialization, and API documentation.
 # ==============================================================================
 
-from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from pydantic import BaseModel, EmailStr,Field
+from typing import List, Optional, Dict, Any
+from datetime import datetime
 
 # ==============================================================================
 # Schema for creating a new player.
@@ -57,25 +58,128 @@ class Token(BaseModel):
     token_type: str
 
 # ==============================================================================
-# Schema representing a single trial (e.g., one mole appearance) in a game.
+# Schemas for Game Data Submission
+# These are designed to match the front-end interfaces.
 # ==============================================================================
-class TrialData(BaseModel):
-    stimulus_size: float
-    success: bool
-    reaction_time_ms: Optional[int]
 
-# ==============================================================================
-# Schema for submitting a completed game session's data.
-# The player_id is no longer needed here as it's derived from the auth token.
-# ==============================================================================
-class SessionCreate(BaseModel):
-    trials: List[TrialData]
+# --- VA Scale Game ---
+class VAScaleGameConfig(BaseModel):
+    hole_size: int = Field(..., alias="holeSize")
+    min_hole_size: int = Field(..., alias="minHoleSize")
+    max_hole_size: int = Field(..., alias="maxHoleSize")
+    hole_gap: int = Field(..., alias="holeGap")
+    ratio: float
+    inner_color: str = Field(..., alias="innerColor")
+    outer_color: str = Field(..., alias="outerColor")
+    bg_color: str = Field(..., alias="bgColor")
+    horizontal_padding: int = Field(..., alias="horizontalPadding")
+    vertical_padding: int = Field(..., alias="verticalPadding")
+    viewing_distance_cm: int = Field(..., alias="viewingDistanceCm")
 
-# ==============================================================================
-# Schema for the API response after processing a game session.
-# ==============================================================================
-class SessionResult(BaseModel):
+
+class ScaleLogEntry(BaseModel):
+    timestamp: int
+    outer_diameter: float = Field(..., alias="outerDiameter")
+    inner_diameter: float = Field(..., alias="innerDiameter")
+    ratio: float
+    scale_method: str = Field(..., alias="scaleMethod")
+    logmar: float
+    user_response: str = Field(..., alias="userResponse")
+
+class VAScaleGameSessionCreate(BaseModel):
+    
+    startTime: int
+    endTime: Optional[int] = None
+    config: VAScaleGameConfig
+    logEntries: List[ScaleLogEntry]
+
+class ScaleGameScore(BaseModel):
+    best_va: float | None = Field(None, alias="bestVA")
+    n: int
+    b: int
+    final_va: float | None = Field(None, alias="finalVA")
+    class Config:
+        populate_by_name = True
+        from_attributes = True
+    
+
+# --- Engagement Game ---
+class AppearanceEvent(BaseModel):
+    id: int
+    targetType: str
+    mouseSize: int
+    row: int
+    col: int
+    quadrant: str
+    appearTime: int
+    clicked: bool
+    clickTime: Optional[int] = None
+    wasHit: Optional[bool] = None
+    clickX: Optional[float] = None
+    clickY: Optional[float] = None
+    wasDistractorClicked: Optional[bool] = None
+
+class EngagementGameConfig(BaseModel):
+    mouseSize: int
+    holeSize: int
+    holeGap: int
+    mouseCount: int
+    spawnInterval: int
+    holeColor: str
+    bgColor: str
+
+class EngagementGameSessionCreate(BaseModel):
+    gameId: str
+    config: EngagementGameConfig
+    events: List[AppearanceEvent]
+    startTime: int
+    endTime: Optional[int] = None
+
+class EngagementScoreSummary(BaseModel):
+    detectionSpeed: Optional[float] = None
+    detectionAccuracy: Optional[float] = None
+    spatialUniformity: Optional[float] = None
+    sensitivityThreshold: Optional[float] = None
+    falsePositiveRate: Optional[float] = None
+    missRate: Optional[float] = None
+    clickValidity: Optional[float] = None
+    trialConsistency: Optional[float] = None
+    maxHitStreak: Optional[int] = None
+    coordinationProxy: Optional[float] = None
+    targetDiscrimination: Optional[float] = None
+    VAfinal: Optional[float] = None
+    totalTrials: int
+    totalMoleTrials: int
+    totalRabbitTrials: int
+
+# --- General Session Response ---
+class SessionSubmitResponse(BaseModel):
     session_id: int
-    player_id: int
-    calculated_logmar: float
     message: str
+
+# ==============================================================================
+# Schemas for returning game history to the front-end.
+# These match the interfaces defined in the va_whack.web project.
+# ==============================================================================
+class AnalysisResultRead(BaseModel):
+    calculated_data: Dict[str, Any]
+    ai_summary: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+class GameSessionRead(BaseModel):
+    id: int
+    game_type: str
+    session_timestamp: datetime
+    raw_data: Dict[str, Any] # The full session data from the front-end
+    analysis_result: Optional[AnalysisResultRead] = None
+    
+    class Config:
+        from_attributes = True
+
+class GameHistoryResponse(BaseModel):
+    scaleGames: List[GameSessionRead]
+    engagementGames: List[GameSessionRead]
+    # Add other game types here as needed
+    va_okn_fast_mode: List[GameSessionRead] = []

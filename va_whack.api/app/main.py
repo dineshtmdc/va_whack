@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .db.session import engine
 from . import models
-from .api.endpoints import players, sessions, auth
+from .api.endpoints import players, auth, games_api
 from .core.config import settings
 
 # This will create the database tables if they don't exist
@@ -19,10 +19,11 @@ app = FastAPI(
     title="Vision Testing App API",
     description="API for a Vision Testing App with Gamification.",
     version="1.0.0",
+    debug=True
 )
 
 # Set up CORS middleware
-origins = settings.CORS_ORIGINS.split(",")
+origins = settings.CORS_ORIGINS.split(",") if settings.CORS_ORIGINS else []
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,7 +37,7 @@ app.add_middleware(
 # Include the endpoint routers
 app.include_router(players.router, prefix="/players", tags=["Players"])
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
-app.include_router(sessions.router, prefix="/sessions", tags=["Game Sessions"])
+app.include_router(games_api.router, prefix="/api", tags=["Games API"])
 
 
 @app.get("/", tags=["Health Check"])

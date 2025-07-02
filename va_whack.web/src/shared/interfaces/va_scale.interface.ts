@@ -1,3 +1,8 @@
+/** ==============================================================================
+# FILE: va_whack.web\src\shared\interfaces\va_scale.interface.ts
+# ==============================================================================
+ */
+
 /** @format */
 
 import type { ResponseOption, ScaleMethod } from '..';
