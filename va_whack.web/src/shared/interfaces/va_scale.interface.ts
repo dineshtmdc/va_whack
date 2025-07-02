@@ -1,6 +1,9 @@
-/** ==============================================================================
-# FILE: va_whack.web\src\shared\interfaces\va_scale.interface.ts
-# ==============================================================================
+/**
+ * ==============================================================================
+ * # FILE: va_whack.web\src\shared\interfaces\va_scale.interface.ts
+ * # ==============================================================================
+ *
+ * @format
  */
 
 /** @format */
@@ -31,6 +34,14 @@ export interface IScaleLogEntry {
 	userResponse?: ResponseOption;
 }
 
+export interface IScaleGameScore {
+	// Derived stats
+	bestVA: number; // minimum logMAR
+	n: number; // total number of entries
+	b: number; // count of 'I can see' responses
+	finalVA: number; // last logMAR
+}
+
 export interface IScaleGameSession {
 	gameId: string;
 	email: string;
@@ -39,12 +50,4 @@ export interface IScaleGameSession {
 	config: IVAScaleGameConfig;
 	logEntries: IScaleLogEntry[];
 	score: IScaleGameScore;
-}
-
-export interface IScaleGameScore {
-	// Derived stats
-	bestVA: number; // minimum logMAR
-	n: number; // total number of entries
-	b: number; // count of 'I can see' responses
-	finalVA: number; // last logMAR
 }
