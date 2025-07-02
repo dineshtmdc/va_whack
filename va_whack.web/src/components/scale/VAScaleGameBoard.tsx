@@ -47,7 +47,7 @@ export const VAScaleGameBoard = ({ config, user, onExit }: IProps) => {
 	const [showScoreDialog, setShowScoreDialog] = useState(false);
 	const prevLogmarRef = useRef(currentLogmar);
 
-	const { startSession, endSession, addLogEntry, setScore } = useVAScaleGameSessionStore();
+	const { startSession, endSession, addLogEntry, setScore, getLastSession } = useVAScaleGameSessionStore();
 
 	useEffect(() => {
 		startSession(user.email, config);
@@ -182,7 +182,7 @@ export const VAScaleGameBoard = ({ config, user, onExit }: IProps) => {
 	};
 
 	const handleCalculateScore = async () => {
-		const session = useVAScaleGameSessionStore.getState().currentSession;
+		const session = getLastSession();
 
 		if (!session) {
 			console.warn('No active session to submit.');
@@ -254,7 +254,7 @@ export const VAScaleGameBoard = ({ config, user, onExit }: IProps) => {
 			{logPanelOpen && <VAScaleGameStatistics isOpen={logPanelOpen} onClose={() => setLogPanelOpen(false)} />}
 			{showChart && (
 				<div className='fixed left-0 w-full bg-white shadow-lg z-40'>
-					<VAScaleChart logEntries={logEntries} bestVA={0.5} finalVA={0.4} />
+					<VAScaleChart logEntries={logEntries} bestVA={0.5} finalVA={0.4} onClose={() => setShowChart(false)} />
 				</div>
 			)}
 

@@ -5,6 +5,7 @@ import { Login, GameSelector, FullscreenHandler } from '.';
 import { ProtectedRoute } from '../routes/ProtectedRoute';
 import { useAuth } from '../auth/useAuth';
 import { EngagementRoute, VAFastRoute, VAScaleRoute, ProfileRoute } from '../routes';
+import { Toaster } from 'react-hot-toast';
 
 export const App = () => {
 	const { user } = useAuth();
@@ -12,6 +13,9 @@ export const App = () => {
 	return (
 		<BrowserRouter>
 			<FullscreenHandler />
+
+			{/* Global toast handler */}
+			<Toaster position='top-left' reverseOrder={false} />
 
 			<Routes>
 				{/* Login page */}

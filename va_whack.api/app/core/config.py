@@ -22,6 +22,12 @@ class Settings:
     SENDER_EMAIL: str = os.getenv("SENDER_EMAIL")
     PIN_EXPIRATION_MINUTES: int = 15
     
+    # AI Reporting
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
+    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
+    OPENAI_TEMPERATURE: float = float(os.getenv("OPENAI_TEMPERATURE", 0.6))
+    OPENAI_MAX_TOKENS: int = int(os.getenv("OPENAI_MAX_TOKENS", 200))
+
     # JWT Security
     SECRET_KEY: str = os.getenv("SECRET_KEY")
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
