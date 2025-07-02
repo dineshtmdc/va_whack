@@ -190,7 +190,6 @@ export const VAScaleGameBoard = ({ config, user, onExit }: IProps) => {
 		}
 
 		const score = await GameService.submitVAScaleGame(session);
-		debugger
 
 		if (score) {
 			setScore(score); // Zustand store update
@@ -255,7 +254,7 @@ export const VAScaleGameBoard = ({ config, user, onExit }: IProps) => {
 			{logPanelOpen && <VAScaleGameStatistics isOpen={logPanelOpen} onClose={() => setLogPanelOpen(false)} />}
 			{showChart && (
 				<div className='fixed left-0 w-full bg-white shadow-lg z-40'>
-					<VAScaleChart logEntries={logEntries} bestVA={0.5} finalVA={0.4} />
+					<VAScaleChart logEntries={logEntries} bestVA={0.5} finalVA={0.4} onClose={() => setShowChart(false)} />
 				</div>
 			)}
 

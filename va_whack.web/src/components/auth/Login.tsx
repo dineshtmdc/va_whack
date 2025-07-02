@@ -9,7 +9,7 @@ import { AuthService } from '../../shared';
 export const Login = () => {
 	const { login } = useAuth();
 
-	const [lang, setLang] = useState<'en' | 'mi'>('en');
+	const [lang, setLang] = useState<'en' | 'mi'>('mi');
 	const [playerType, setPlayerType] = useState<'new' | 'existing'>('new');
 	const [name, setName] = useState('');
 	const [email, setEmail] = useState('');
