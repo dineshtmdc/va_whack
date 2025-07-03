@@ -50,4 +50,5 @@ export interface IScaleGameSession {
 	config: IVAScaleGameConfig;
 	logEntries: IScaleLogEntry[];
 	score: IScaleGameScore;
+	masterSessionId: string;
 }

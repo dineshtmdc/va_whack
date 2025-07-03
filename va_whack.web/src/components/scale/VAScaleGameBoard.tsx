@@ -1,17 +1,30 @@
 /** @format */
 
 import { useEffect, useRef, useState } from 'react';
-import { FileText, X, Home, RotateCcw } from 'lucide-react';
+import { FileText, X, Home, RotateCcw, ChevronRight, ChevronLeft, Settings } from 'lucide-react';
 import { type IVAScaleGameConfig, type IUserDetails, type IScaleLogEntry, type IScaleGameScore, type ResponseOption, type Phase, type ScaleMethod, useVAScaleGameSessionStore, GameService } from '../../shared';
-import { VAScaleChart, VAScaleGameStatistics } from '..';
+import { VAScaleChart, VAScaleControlPanel, VAScaleGameStatistics } from '..';
+import { useGameMasterSessionStore } from '../../shared/zustand/game_master_store';
 
 interface IProps {
-	config: IVAScaleGameConfig;
 	user: IUserDetails;
 	onExit: () => void;
 }
 
-export const VAScaleGameBoard = ({ config, user, onExit }: IProps) => {
+export const VAScaleGameBoard = ({ user, onExit }: IProps) => {
+	const [config, setConfig] = useState<IVAScaleGameConfig>({
+		holeSize: 30,
+		minHoleSize: 1,
+		maxHoleSize: 30,
+		holeGap: 2,
+		ratio: 0.5,
+		innerColor: '#ffffff',
+		outerColor: '#666666',
+		bgColor: '#f0f0f0',
+		horizontalPadding: 50,
+		verticalPadding: 30,
+		viewingDistanceCm: 150,
+	});
 	const mmToPx = (mm: number) => mm * 3.78;
 	const toOdd = (n: number) => (n <= 1 ? 1 : n % 2 === 0 ? n - 1 : n);
 
@@ -41,23 +54,30 @@ export const VAScaleGameBoard = ({ config, user, onExit }: IProps) => {
 	const [trialResponses, setTrialResponses] = useState<ResponseOption[]>([]);
 	const [bestlineFound, setBestlineFound] = useState(false);
 	const [showChart, setShowChart] = useState(false);
-	const [isHoveringControlsRight, setHoveringControlsRight] = useState(false);
-	const [isHoveringControlsLeft, setHoveringControlsLeft] = useState(false);
+	const [showControlPanel, setShowControlPanel] = useState(false);
+	const [isHoveringControls, setIsHoveringControls] = useState(false);
 	const [calculatedScore, setCalculatedScore] = useState<IScaleGameScore | null>(null);
 	const [showScoreDialog, setShowScoreDialog] = useState(false);
 	const prevLogmarRef = useRef(currentLogmar);
-
+	const [isControlsExpanded, setIsControlsExpanded] = useState(false);
 	const { startSession, endSession, addLogEntry, setScore, getLastSession } = useVAScaleGameSessionStore();
 
 	useEffect(() => {
-		startSession(user.email, config);
+		const masterSessionId = useGameMasterSessionStore.getState().currentSession.sessionId;
+		startSession(user.email, config, masterSessionId);
 	}, [user, config, startSession]);
 
 	useEffect(() => {
-		if (gameOverMessage) {
+		const handleEndAndSubmit = async () => {
 			endSession();
+			useGameMasterSessionStore.getState().markVAScaleComplete();
+			await handleCalculateScore();
+		};
+
+		if (gameOverMessage && !scoreCalculated) {
+			handleEndAndSubmit();
 		}
-	}, [gameOverMessage, endSession]);
+	}, [gameOverMessage, scoreCalculated, endSession]);
 
 	const getCellSizePx = () => mmToPx(logmarToMm(1.0, config.viewingDistanceCm) + config.holeGap);
 
@@ -206,57 +226,64 @@ export const VAScaleGameBoard = ({ config, user, onExit }: IProps) => {
 	const currentDiameter = logmarToMm(currentLogmar, config.viewingDistanceCm);
 	const baseDiameter = logmarToMm(1.0, config.viewingDistanceCm);
 
+	const restart = () => {
+		endSession();
+		setCurrentLogmar(1.0);
+		setLogEntries([]);
+		setAllowResponse(true);
+		setInitialResponseGiven(false);
+		setGameOverMessage(null);
+		setScoreCalculated(false);
+		setPhase('quickSearch');
+		setTrialResponses([]);
+		setBestlineFound(false);
+		prevLogmarRef.current = 1.0;
+		updateGridSize();
+	};
+
 	return (
 		<div className='w-full h-screen relative'>
-			{gameOverMessage && !scoreCalculated && (
+			{/* {gameOverMessage && !scoreCalculated && (
 				<div className='absolute top-4 left-1/2 transform -translate-x-1/2 z-30'>
 					<button onClick={handleCalculateScore} className='bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded shadow'>
 						Calculate Score
 					</button>
 				</div>
-			)}
+			)} */}
 
-			<div className={`fixed top-3 left-4 z-40 flex gap-2 ${isHoveringControlsLeft ? 'opacity-100' : 'opacity-0'}`} onMouseEnter={() => setHoveringControlsLeft(true)} onMouseLeave={() => setHoveringControlsLeft(false)}>
-				<button title='Toggle Scale Log' onClick={() => setLogPanelOpen((v) => !v)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
-					{logPanelOpen ? <X className='w-5 h-5' /> : <FileText className='w-5 h-5' />}
+			{/* Controls */}
+			<div className='absolute top-4 right-4 z-20 flex items-center space-x-2'>
+				<button onClick={() => setIsControlsExpanded((prev) => !prev)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
+					{isControlsExpanded ? <ChevronRight className='w-5 h-5' /> : <ChevronLeft className='w-5 h-5' />}
 				</button>
-				<button title='Toggle Chart' onClick={() => setShowChart((v) => !v)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
-					📈
-				</button>
+				{isControlsExpanded && (
+					<div className={`flex gap-2 ${isHoveringControls ? 'opacity-100' : 'opacity-80'}`} onMouseEnter={() => setIsHoveringControls(true)} onMouseLeave={() => setIsHoveringControls(false)}>
+						<button onClick={onExit} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' title='Exit to Home'>
+							<Home className='w-5 h-5' />
+						</button>
+						<button onClick={() => restart()} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' title='Reset Game'>
+							<RotateCcw className='w-5 h-5' />
+						</button>
+						{logPanelOpen && <VAScaleGameStatistics isOpen={logPanelOpen} onClose={() => setLogPanelOpen(false)} />}
+						{showChart && (
+							<div className='fixed left-0 w-full bg-white shadow-lg z-40'>
+								<VAScaleChart logEntries={logEntries} bestVA={calculatedScore?.bestVA} finalVA={calculatedScore?.finalVA} onClose={() => setShowChart(false)} />
+							</div>
+						)}
+						<button title='Toggle Scale Log' onClick={() => setLogPanelOpen((v) => !v)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
+							{logPanelOpen ? <X className='w-5 h-5' /> : <FileText className='w-5 h-5' />}
+						</button>
+						<button title='Toggle Chart' onClick={() => setShowChart((v) => !v)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
+							📈
+						</button>
+						<button onClick={() => setShowControlPanel((prev) => !prev)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' title='Toggle Settings'>
+							{showControlPanel ? <X className='w-5 h-5' /> : <Settings className='w-5 h-5' />}
+						</button>
+					</div>
+				)}
 			</div>
 
-			{/* Right Controls */}
-			<div className={`absolute top-4 right-16 z-20 flex gap-2 transition-opacity duration-300 ${isHoveringControlsRight ? 'opacity-100' : 'opacity-0'}`} onMouseEnter={() => setHoveringControlsRight(true)} onMouseLeave={() => setHoveringControlsRight(false)}>
-				<button onClick={onExit} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' title='Exit to Home'>
-					<Home className='w-5 h-5' />
-				</button>
-				<button
-					onClick={() => {
-						endSession();
-						setCurrentLogmar(1.0);
-						setLogEntries([]);
-						setAllowResponse(true);
-						setInitialResponseGiven(false);
-						setGameOverMessage(null);
-						setScoreCalculated(false);
-						setPhase('quickSearch');
-						setTrialResponses([]);
-						setBestlineFound(false);
-						prevLogmarRef.current = 1.0;
-						updateGridSize();
-					}}
-					className='bg-white p-2 rounded-full shadow hover:bg-gray-100'
-					title='Reset Game'>
-					<RotateCcw className='w-5 h-5' />
-				</button>
-			</div>
-
-			{logPanelOpen && <VAScaleGameStatistics isOpen={logPanelOpen} onClose={() => setLogPanelOpen(false)} />}
-			{showChart && (
-				<div className='fixed left-0 w-full bg-white shadow-lg z-40'>
-					<VAScaleChart logEntries={logEntries} bestVA={0.5} finalVA={0.4} onClose={() => setShowChart(false)} />
-				</div>
-			)}
+			{showControlPanel && <VAScaleControlPanel config={config} onChange={(u) => setConfig((p) => ({ ...p, ...u }))} />}
 
 			{/* Grid & Buttons */}
 			<div className='w-full h-full flex flex-col items-center justify-center' style={{ backgroundColor: config.bgColor, paddingLeft: logPanelOpen ? '320px' : '0' }}>
@@ -311,10 +338,10 @@ export const VAScaleGameBoard = ({ config, user, onExit }: IProps) => {
 									<strong>VAfinal = VAbest-line– 0.02n + 0.02b</strong>
 								</li>
 								<li>
-									<strong>Best VA:</strong> {calculatedScore.bestVA.toFixed(2)}
+									<strong>VA Best:</strong> {calculatedScore.bestVA.toFixed(2)}
 								</li>
 								<li>
-									<strong>Final VA:</strong> {calculatedScore.finalVA.toFixed(2)}
+									<strong>VA Final:</strong> {calculatedScore.finalVA.toFixed(2)}
 								</li>
 								<li>
 									<strong>n = No of correct identifications below the best-line:</strong> {calculatedScore.n}
@@ -324,7 +351,12 @@ export const VAScaleGameBoard = ({ config, user, onExit }: IProps) => {
 								</li>
 							</ul>
 							<div className='mt-4 flex justify-center'>
-								<button onClick={() => setShowScoreDialog(false)} className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>
+								<button
+									onClick={() => {
+										setShowScoreDialog(false);
+										onExit();
+									}}
+									className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>
 									Close
 								</button>
 							</div>

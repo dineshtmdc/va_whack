@@ -1,6 +1,9 @@
-/** ==============================================================================
-# FILE: va_whack.web\src\shared\services\games-service.ts
-# ==============================================================================
+/**
+ * ==============================================================================
+ * # FILE: va_whack.web\src\shared\services\games-service.ts
+ * # ==============================================================================
+ *
+ * @format
  */
 
 /** @format */
@@ -14,7 +17,6 @@ export const GameService = {
 	 */
 	async submitVAScaleGame(data: IScaleGameSession): Promise<IScaleGameScore | undefined> {
 		try {
-			debugger
 			const url = `/api/va-scale-game/submit`;
 			const response = await apiClient.post(url, data);
 			return response.data as IScaleGameScore;

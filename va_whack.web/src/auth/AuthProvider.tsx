@@ -1,9 +1,13 @@
 /** @format */
 
-import { useState } from 'react';
-import type { ReactNode } from 'react';
-import { AuthContext } from './AuthContext';
+import { useEffect, useState, type ReactNode } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import type { IAuthContext, IUserDetails } from '../shared';
+import { AuthContext } from './AuthContext';
+
+interface DecodedToken {
+	exp: number; // Unix timestamp (seconds)
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	const [user, setUser] = useState<IUserDetails | null>(() => {
@@ -22,6 +26,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			return null;
 		}
 	});
+
+	// Automatically logout when token expires
+	useEffect(() => {
+		if (!token) return;
+
+		try {
+			const decoded = jwtDecode<DecodedToken>(token);
+			const now = Date.now() / 1000;
+			const timeLeft = decoded.exp - now;
+
+			if (timeLeft <= 0) {
+				logout();
+			} else {
+				const timeout = setTimeout(() => {
+					logout();
+				}, timeLeft * 1000); // Convert to milliseconds
+
+				return () => clearTimeout(timeout);
+			}
+		} catch (error) {
+			console.error('Invalid token:', error);
+			logout();
+		}
+	}, [token]);
 
 	const login = (user: IUserDetails, token: string) => {
 		localStorage.setItem('user', JSON.stringify(user));
