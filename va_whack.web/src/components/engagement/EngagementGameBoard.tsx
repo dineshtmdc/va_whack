@@ -105,7 +105,6 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	const [showCountdown, setShowCountdown] = useState(false);
 	const [countdownNumber, setCountdownNumber] = useState<number | null>(null);
 	const [allLevelsComplete, setAllLevelsComplete] = useState(false);
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [comboCount, setComboCount] = useState(0);
 	const [showComboMessage, setShowComboMessage] = useState(false);
 
@@ -455,7 +454,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 			{showControlPanel && <EnagementControlPanel config={config} onChange={(u) => setConfig((p) => ({ ...p, ...u }))} />}
 
 			{/* HUD */}
-			<div className={`absolute top-4 left-4 z-20 text-black text-lg flex items-center space-x-6 ${gameOver || isHoveringHud ? 'opacity-100' : 'opacity-0'}`} onMouseEnter={() => setIsHoveringHud(true)} onMouseLeave={() => setIsHoveringHud(false)}>
+			<div className={`absolute z-20 text-black text-lg flex items-center space-x-6 ${gameOver || isHoveringHud ? 'opacity-100' : 'opacity-0'} left-4 top-20 sm:top-2`} onMouseEnter={() => setIsHoveringHud(true)} onMouseLeave={() => setIsHoveringHud(false)}>
 				<p>Time Left: {formatTime(timeLeft)}</p>
 				<p>Hits: {hitCount}</p>
 				<p>Misses: {missCount}</p>
