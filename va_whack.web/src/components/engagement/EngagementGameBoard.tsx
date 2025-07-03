@@ -10,13 +10,35 @@ import { Home, RotateCcw, BarChart, Settings, X, ChevronLeft, ChevronRight } fro
 import hitSoundSrc from '../../assets/sounds/hit_sound.mp3';
 import missSoundSrc from '../../assets/sounds/miss_sound.mp3';
 import { useGameMasterSessionStore } from '../../shared/zustand/game_master_store';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface IProps {
 	user: IUserDetails;
 	onExit: () => void;
 }
-
-const GAME_LEVELS: Record<string, { config: IEnagementGameConfig; duration: number }> = {
+const MOBILE_GAME_LEVELS: Record<string, { config: IEnagementGameConfig; duration: number }> = {
+	'Very Easy': {
+		config: { mouseSize: 100, holeSize: 100, holeGap: 10, fakeCount: 0, spawnInterval: 2500, holeColor: '#666666', bgColor: '#f8f8f8' },
+		duration: 20,
+	},
+	Easy: {
+		config: { mouseSize: 80, holeSize: 80, holeGap: 8, fakeCount: 1, spawnInterval: 2000, holeColor: '#666666', bgColor: '#f8f8f8' },
+		duration: 20,
+	},
+	Medium: {
+		config: { mouseSize: 64, holeSize: 64, holeGap: 6, fakeCount: 2, spawnInterval: 1500, holeColor: '#666666', bgColor: '#f8f8f8' },
+		duration: 20,
+	},
+	Hard: {
+		config: { mouseSize: 48, holeSize: 48, holeGap: 4, fakeCount: 5, spawnInterval: 1000, holeColor: '#666666', bgColor: '#f8f8f8' },
+		duration: 20,
+	},
+	'Very Hard': {
+		config: { mouseSize: 36, holeSize: 36, holeGap: 2, fakeCount: 8, spawnInterval: 700, holeColor: '#666666', bgColor: '#f8f8f8' },
+		duration: 20,
+	},
+};
+const DESKTOP_GAME_LEVELS: Record<string, { config: IEnagementGameConfig; duration: number }> = {
 	'Very Easy': {
 		config: { mouseSize: 160, holeSize: 160, holeGap: 20, fakeCount: 0, spawnInterval: 2500, holeColor: '#666666', bgColor: '#f0f0f0' },
 		duration: 20,
@@ -55,9 +77,8 @@ const formatTime = (sec: number) => {
 };
 
 export const EngagementGameBoard = ({ onExit, user }: IProps) => {
+	const isMobile = useIsMobile();
 	const [gameStarted, setGameStarted] = useState(false);
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-
 	const [mice, setMice] = useState<IMole[]>([]);
 	const [prevMouseIds, setPrevMouseIds] = useState<number[]>([]);
 	const [rows, setRows] = useState(0);
@@ -91,15 +112,15 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	const hitSoundRef = useRef<HTMLAudioElement | null>(null);
 	const missSoundRef = useRef<HTMLAudioElement | null>(null);
 
-	const [config, setConfig] = useState<IEnagementGameConfig>({
-		mouseSize: 32,
-		holeSize: 64,
-		holeGap: 4,
-		fakeCount: 1,
-		spawnInterval: 1500,
-		holeColor: '#666666',
-		bgColor: '#f0f0f0',
-	});
+	const [config, setConfig] = useState<IEnagementGameConfig>(isMobile ? MOBILE_GAME_LEVELS['Very Easy'].config : DESKTOP_GAME_LEVELS['Very Easy'].config);
+
+	useEffect(() => {
+		// Only update config if game hasn't started yet
+
+		if (!gameStarted) {
+			setConfig(isMobile ? MOBILE_GAME_LEVELS['Very Easy'].config : DESKTOP_GAME_LEVELS['Very Easy'].config);
+		}
+	}, [isMobile, gameStarted]);
 
 	console.log(comboCount);
 
@@ -284,7 +305,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	const handleStartGame = (levelName: string) => {
 		if (scoreCalculated && !scoreDialogAcknowledged) return;
 
-		const levelData = GAME_LEVELS[levelName];
+		const levelData = (isMobile ? MOBILE_GAME_LEVELS : DESKTOP_GAME_LEVELS)[levelName];
 		setConfig(levelData.config);
 
 		const usableWidth = window.innerWidth - 32;
