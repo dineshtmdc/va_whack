@@ -1,15 +1,14 @@
 /** @format */
 
 import { useState, useMemo } from 'react';
-
 import { useAuth } from '../../auth/useAuth';
-import { MousePointerClick, Rabbit, Eye, Circle, Mouse, Rat, EyeClosed, EyeOff, Brain, LoaderCircle } from 'lucide-react'; // Using Circle = 'C', Eye = 'E'
-import { AuthService } from '../../shared';
+import { MousePointerClick, Rabbit, Eye, Circle, Mouse, Rat, EyeClosed, EyeOff, Brain, LoaderCircle, Globe } from 'lucide-react';
+import { AuthService, labels, useUIStore } from '../../shared';
+import toast from 'react-hot-toast';
 
 export const Login = () => {
 	const { login } = useAuth();
 
-	const [lang, setLang] = useState<'en' | 'mi'>('mi');
 	const [playerType, setPlayerType] = useState<'new' | 'existing'>('new');
 	const [name, setName] = useState('');
 	const [email, setEmail] = useState('');
@@ -19,60 +18,11 @@ export const Login = () => {
 	const [loading, setLoading] = useState(false);
 	const [errorMessage, setErrorMessage] = useState('');
 
-	const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-	const labels = {
-		en: {
-			centerTitle: 'Welcome to Vision Acuity Game Center',
-			centerSubtitle: 'Welcome',
-			login: 'Login',
-			newPlayer: 'New Player',
-			existingPlayer: 'Existing Player',
-			name: 'Name',
-			ageGroup: 'Age Group',
-			selectAge: 'Select age...',
-			email: 'Email',
-			requestPin: 'Request PIN',
-			sending: 'Sending...',
-			pinLabel: '6-Digit PIN',
-			verifyContinue: 'Verify & Continue',
-			loginContinue: 'Login & Continue',
-			invalidEmail: 'Please enter a valid email.',
-			fillFields: 'Please fill in all fields for a new player.',
-			registrationSuccess: 'Registration successful! A verification PIN has been sent to your email.',
-			loginPinSent: 'A login PIN has been sent to your email.',
-			authFailed: 'Authentication failed:',
-			fetchFailed: 'Failed to send PIN:',
-			invalidPin: 'Please enter a valid email and 6-digit PIN.',
-			langToggle: 'Māori',
-		},
-		mi: {
-			centerTitle: 'Nau mai ki te Pokapū Kēmu Tirohanga Mata',
-			centerSubtitle: 'Nau mai',
-			login: 'Takiuru',
-			newPlayer: 'Kaitākaro Hou',
-			existingPlayer: 'Kaitākaro Ināianei',
-			name: 'Ingoa',
-			ageGroup: 'Rōpū Tau',
-			selectAge: 'Kōwhiria te tau...',
-			email: 'Īmēra',
-			requestPin: 'Tonoa te PIN',
-			sending: 'Kei te tuku...',
-			pinLabel: 'PIN 6-mati',
-			verifyContinue: 'Whakaū me te Haere Tonu',
-			loginContinue: 'Takiuru me te Haere Tonu',
-			invalidEmail: 'Tēnā, whakauruhia he īmēra tika.',
-			fillFields: 'Whakaotia ngā pāraimata katoa mō te kaitākaro hou.',
-			registrationSuccess: 'Kua angitū te rēhita! Kua tukuna te PIN ki tō īmēra.',
-			loginPinSent: 'Kua tukuna he PIN takiuru ki tō īmēra.',
-			authFailed: 'I rahua te takiuru:',
-			fetchFailed: 'I rahua te tuku PIN:',
-			invalidPin: 'Whakauruhia he īmēra tika me te PIN 6-mati.',
-			langToggle: 'English',
-		},
-	};
-
+	const lang = useUIStore((s) => s.lang);
+	const toggleLang = useUIStore((s) => s.toggleLang);
 	const t = labels[lang];
+
+	const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 	const handleRequestPin = async () => {
 		setErrorMessage('');
@@ -80,18 +30,18 @@ export const Login = () => {
 			setErrorMessage(t.invalidEmail);
 			return;
 		}
+		if (playerType === 'new' && (!name || !ageGroup)) {
+			setErrorMessage(t.fillFields);
+			return;
+		}
 		setLoading(true);
 		try {
 			if (playerType === 'new') {
-				if (!name || !ageGroup) {
-					setErrorMessage(t.fillFields);
-					return;
-				}
 				await AuthService.registerPlayer(name, email, ageGroup);
-				alert(t.registrationSuccess);
+				toast.success(t.registrationSuccess, { duration: 5000 });
 			} else {
 				await AuthService.requestLoginPin(email);
-				alert(t.loginPinSent);
+				toast.success(t.loginPinSent, { duration: 5000 });
 			}
 			setPinRequested(true);
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -105,35 +55,48 @@ export const Login = () => {
 
 	const handleAuthentication = async () => {
 		setErrorMessage('');
+
 		if (!email || !/^\d{6}$/.test(pin)) {
 			setErrorMessage(t.invalidPin);
 			return;
 		}
+
 		setLoading(true);
 		try {
 			let token = '';
-			let finalName = name;
-			let finalAgeGroup = ageGroup;
+			let finalName = '';
+			let finalAgeGroup: string | null = null;
 
 			if (playerType === 'new') {
 				const response = await AuthService.verifyPlayerPin(email, pin);
 				token = response.data.access_token;
+				finalName = response.data.name;
+				finalAgeGroup = response.data.ageGroup;
 			} else {
 				const response = await AuthService.getAuthToken(email, pin);
 				token = response.data.access_token;
-				finalName = t.existingPlayer;
-				finalAgeGroup = '';
+				finalName = response.data.name;
+				finalAgeGroup = response.data.ageGroup;
 			}
-			login({ name: finalName, email, ageGroup: finalAgeGroup, isNew: playerType === 'new' }, token);
+
+			login(
+				{
+					name: finalName,
+					email,
+					ageGroup: finalAgeGroup,
+					isNew: playerType === 'new',
+				},
+				token
+			);
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (err: any) {
-			const apiError = err.response?.data?.detail || 'An unknown error occurred.';
+			const apiError = err?.response?.data?.detail || 'An unknown error occurred.';
 			setErrorMessage(`${t.authFailed} ${apiError}`);
 		} finally {
 			setLoading(false);
 		}
 	};
-	// Shuffle icons for jumbled look
+
 	const icons = useMemo(() => {
 		return Array(100)
 			.fill([MousePointerClick, Mouse, Rabbit, Rat, Eye, Circle, EyeClosed, EyeOff, Brain, LoaderCircle])
@@ -154,9 +117,10 @@ export const Login = () => {
 
 			{/* Language toggle */}
 			<div className='absolute top-4 right-4 z-10'>
-				<button onClick={() => setLang((prev) => (prev === 'en' ? 'mi' : 'en'))} className='bg-white text-gray-700 px-4 py-1 rounded-md shadow hover:bg-gray-100'>
+				<button onClick={toggleLang} className='absolute top-4 left-4 p-2 bg-white rounded shadow hover:bg-gray-100 flex items-center gap-2'>
+					<Globe className='w-4 h-4' />
 					{t.langToggle}
-				</button>
+				</button>{' '}
 			</div>
 
 			<h1 className='text-4xl font-extrabold text-blue-800 mb-2 text-center z-10'>{t.centerTitle}</h1>

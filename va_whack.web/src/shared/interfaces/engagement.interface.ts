@@ -1,6 +1,9 @@
-/** ==============================================================================
-# FILE: va_whack.web\src\shared\interfaces\engagement.interface.ts
-# ==============================================================================
+/**
+ * ==============================================================================
+ * # FILE: va_whack.web\src\shared\interfaces\engagement.interface.ts
+ * # ==============================================================================
+ *
+ * @format
  */
 
 /** @format */
@@ -18,7 +21,7 @@ export interface IEnagementGameConfig {
 	mouseSize: number;
 	holeSize: number;
 	holeGap: number;
-	mouseCount: number;
+	fakeCount: number;
 	spawnInterval: number;
 	holeColor: string;
 	bgColor: string;
@@ -32,6 +35,7 @@ export interface IEnagementGameSession {
 	startTime: number; // optional: for session tracking
 	endTime?: number;
 	scores: IEnagementScoreSummary;
+	masterSessionId: string;
 }
 
 export interface IAppearanceEvent {
