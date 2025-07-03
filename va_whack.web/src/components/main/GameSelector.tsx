@@ -6,8 +6,9 @@ import { useUIStore } from '../../shared/zustand/ui_store';
 import { labels, type IUserDetails } from '../../shared';
 
 import { GameTile } from './GameTile';
-import { Eye, MousePointerClick, ZoomIn, User, Globe } from 'lucide-react';
+import { Eye, MousePointerClick, ZoomIn, User, Globe, LogOut } from 'lucide-react';
 import { useGameMasterSessionStore } from '../../shared/zustand/game_master_store';
+import { useAuth } from '../../auth/useAuth';
 
 interface IProps {
 	user: IUserDetails;
@@ -21,6 +22,7 @@ export const GameSelector = ({ user }: IProps) => {
 	const t = labels[lang];
 
 	const { engagementCompleted, vaScaleCompleted, sessionId } = useGameMasterSessionStore((s) => s.currentSession);
+	const { logout } = useAuth();
 
 	if (location.pathname !== '/game-selector') {
 		return <Outlet />;
@@ -32,11 +34,18 @@ export const GameSelector = ({ user }: IProps) => {
 			<button onClick={toggleLang} className='absolute top-4 left-4 p-2 bg-white rounded shadow hover:bg-gray-100 flex items-center gap-2'>
 				<Globe className='w-4 h-4' />
 				{t.langToggle}
-			</button>{' '}
+			</button>
+
 			{/* Profile icon */}
 			<button onClick={() => navigate('/profile')} className='absolute top-4 right-4 p-2 bg-white rounded-full shadow hover:bg-gray-100' aria-label={t.profileAria}>
 				<User className='w-6 h-6 text-gray-700' />
 			</button>
+
+			{/* Logout button */}
+			<button onClick={logout} className='absolute top-4 right-20 p-2 bg-white rounded-full shadow hover:bg-gray-100' aria-label={t.logoutAria || 'Logout'}>
+				<LogOut className='w-6 h-6 text-red-600' />
+			</button>
+
 			<p className='text-sm text-gray-500'>
 				{t.sessionId}: {sessionId}
 			</p>
