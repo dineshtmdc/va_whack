@@ -14,36 +14,35 @@ interface IProps {
 
 export const VAScaleGameBoard = ({ user, onExit }: IProps) => {
 	const isMobile = useIsMobile();
+	console.log('isMobile:', isMobile);
 
-	const defaultConfig: IVAScaleGameConfig = isMobile
-		? {
-				holeSize: 16,
-				minHoleSize: 1,
-				maxHoleSize: 16,
-				holeGap: 1,
-				ratio: 0.5,
-				innerColor: '#ffffff',
-				outerColor: '#666666',
-				bgColor: '#f0f0f0',
-				horizontalPadding: 10,
-				verticalPadding: 10,
-				viewingDistanceCm: 20,
-		  }
-		: {
-				holeSize: 30,
-				minHoleSize: 1,
-				maxHoleSize: 30,
-				holeGap: 2,
-				ratio: 0.5,
-				innerColor: '#ffffff',
-				outerColor: '#666666',
-				bgColor: '#f0f0f0',
-				horizontalPadding: 50,
-				verticalPadding: 30,
-				viewingDistanceCm: 150,
-		  };
+	const mobileConfig: IVAScaleGameConfig = {
+		holeSize: 30,
+		minHoleSize: 1,
+		maxHoleSize: 30,
+		holeGap: 1,
+		ratio: 0.5,
+		innerColor: '#ffffff',
+		outerColor: '#666666',
+		bgColor: '#f0f0f0',
+		horizontalPadding: 25,
+		verticalPadding: 25,
+		viewingDistanceCm: 50,
+	};
 
-	const [config, setConfig] = useState<IVAScaleGameConfig>(defaultConfig);
+	const desktopConfig: IVAScaleGameConfig = {
+		holeSize: 30,
+		minHoleSize: 1,
+		maxHoleSize: 30,
+		holeGap: 2,
+		ratio: 0.5,
+		innerColor: '#ffffff',
+		outerColor: '#666666',
+		bgColor: '#f0f0f0',
+		horizontalPadding: 50,
+		verticalPadding: 30,
+		viewingDistanceCm: 150,
+	};
 
 	const lang = useUIStore((s) => s.lang);
 	const t = labels[lang];
@@ -84,6 +83,13 @@ export const VAScaleGameBoard = ({ user, onExit }: IProps) => {
 	const prevLogmarRef = useRef(currentLogmar);
 	const [isControlsExpanded, setIsControlsExpanded] = useState(false);
 	const { startSession, endSession, addLogEntry, setScore, getLastSession } = useVAScaleGameSessionStore();
+
+	const [config, setConfig] = useState<IVAScaleGameConfig>(isMobile ? mobileConfig : desktopConfig);
+
+	// ✅ Update config when isMobile changes — only if game hasn't started yet
+	useEffect(() => {
+		setConfig(isMobile ? mobileConfig : desktopConfig);
+	}, [isMobile]);
 
 	useEffect(() => {
 		const masterSessionId = useGameMasterSessionStore.getState().currentSession.sessionId;
