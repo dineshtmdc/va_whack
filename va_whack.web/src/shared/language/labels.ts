@@ -71,6 +71,10 @@ export const labels = {
 		profileNo: 'No',
 
 		logoutAria: 'Logout',
+
+		canSee: 'I can see',
+		cantSee: 'I cant see',
+		giveUp: 'I give up',
 	},
 
 	mi: {
@@ -139,6 +143,10 @@ export const labels = {
 		profileNo: 'Kāo',
 
 		logoutAria: 'Takiputa',
+
+		canSee: 'Ka kite au', // I can see
+		cantSee: 'Kāore au i te kite', // I can't see
+		giveUp: 'Ka whakarerea e au', // I give up
 	},
 } as const;
 
