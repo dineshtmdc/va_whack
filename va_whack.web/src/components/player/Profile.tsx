@@ -45,16 +45,30 @@ export const Profile = ({ user, onExit }: IProps) => {
 		return grouped;
 	}, [allScaleSessions, allEngagementSessions]);
 
-	const [expandedSessions, setExpandedSessions] = useState<Record<string, boolean>>({});
+	const [expandedSessions, setExpandedSessions] = useState<Record<string, boolean>>(() => {
+		const initialState: Record<string, boolean> = {};
+		for (const masterId in groupedByMasterSession) {
+			initialState[masterId] = true; // default expanded
+		}
+		return initialState;
+	});
 
-	const handleDownloadReport = (masterId: string) => {
+	const handleDownloadAIAnalysis = (masterId: string) => {
 		const group = groupedByMasterSession[masterId];
-		console.log('Download report for:', masterId, group);
+		console.log('Download AI Report:', masterId, group);
+		alert('Under Developing');
+	};
+
+	const handleDownloadGameData = (masterId: string) => {
+		const group = groupedByMasterSession[masterId];
+		console.log('Download Game Data:', masterId, group);
+		alert('Under Developing');
 	};
 
 	const handleEmailReport = (masterId: string) => {
 		const group = groupedByMasterSession[masterId];
 		console.log('Email report for:', masterId, group);
+		alert('Under Developing');
 	};
 
 	return (
@@ -91,8 +105,12 @@ export const Profile = ({ user, onExit }: IProps) => {
 								<div className='space-x-2'>
 									{isExpanded && (
 										<>
-											<button className='bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded' onClick={() => handleDownloadReport(masterId)}>
-												{t.profileDownload}
+											<button className='bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded' onClick={() => handleDownloadAIAnalysis(masterId)}>
+												{t.profileDownloadAI}
+											</button>
+
+											<button className='bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded' onClick={() => handleDownloadGameData(masterId)}>
+												{t.profileDownloadGame}
 											</button>
 											<button className='bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded' onClick={() => handleEmailReport(masterId)}>
 												{t.profileEmail}
@@ -169,7 +187,60 @@ export const Profile = ({ user, onExit }: IProps) => {
 											<h3 className='text-lg font-semibold text-green-600 flex items-center gap-2'>
 												<Timer className='w-5 h-5' /> {t.profileEngagementTitle}
 											</h3>
-											{/* Engagement rendering remains the same (continue localizing if needed) */}
+											{group.engagement.map((s, i) => (
+												<div key={s.gameId} className='border border-gray-300 rounded-md p-3 mt-4'>
+													<p className='text-sm text-gray-500'>
+														<span className='text-amber-900'>
+															<b>Level {i + 1}</b>
+														</span>{' '}
+														— Start: {new Date(s.startTime).toLocaleString()} | End: {s.endTime ? new Date(s.endTime).toLocaleString() : 'In progress'}
+													</p>
+													<p className='text-sm text-gray-700 mt-1'>
+														<b>Config:</b> HoleSize = {s.config.holeSize}px, Gap = {s.config.holeGap}px, FakeCount = {s.config.fakeCount}, Interval = {s.config.spawnInterval}ms
+													</p>
+
+													<p className='text-sm text-gray-700 mt-1'>
+														<b>Scores:</b>
+														<br />
+														SS1 = {s.scores.SS1_detectionSpeed ?? '-'}, SS2 = {s.scores.SS2_detectionAccuracy ?? '-'}, SS3 = {s.scores.SS3_spatialUniformity ?? '-'}, SS4 = {s.scores.SS4_sensitivityThreshold ?? '-'}
+														<br />
+														SS5 = {s.scores.SS5_falsePositiveRate ?? '-'}, SS6 = {s.scores.SS6_missRate ?? '-'}, SS7 = {s.scores.SS7_clickValidity ?? '-'}
+														<br />
+														SS8 = {s.scores.SS8_trialConsistency ?? '-'}, SS9 = {s.scores.SS9_maxHitStreak ?? '-'}, SS10 = {s.scores.SS10_coordinationProxy ?? '-'}
+														<br />
+														SS11 = {s.scores.SS11_targetDiscrimination ?? '-'}, VAfinal = {s.scores.VAfinal ?? '-'}
+													</p>
+
+													<div className='mt-3 max-h-[300px] overflow-y-auto border rounded'>
+														<table className='w-full text-sm'>
+															<thead className='sticky top-0 bg-gray-100'>
+																<tr>
+																	<th className='border p-1'>#</th>
+																	<th className='border p-1'>Type</th>
+																	<th className='border p-1'>Row/Col</th>
+																	<th className='border p-1'>Clicked</th>
+																	<th className='border p-1'>Hit</th>
+																	<th className='border p-1'>Time</th>
+																</tr>
+															</thead>
+															<tbody>
+																{s.events.map((e, j) => (
+																	<tr key={j}>
+																		<td className='border p-1'>{j + 1}</td>
+																		<td className='border p-1'>{e.targetType}</td>
+																		<td className='border p-1'>
+																			{e.row},{e.col}
+																		</td>
+																		<td className='border p-1'>{e.clicked ? 'Yes' : 'No'}</td>
+																		<td className='border p-1'>{e.wasHit ? 'Yes' : 'No'}</td>
+																		<td className='border p-1'>{new Date(e.appearTime).toLocaleTimeString()}</td>
+																	</tr>
+																))}
+															</tbody>
+														</table>
+													</div>
+												</div>
+											))}
 										</div>
 									)}
 								</>

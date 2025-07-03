@@ -47,7 +47,8 @@ export const labels = {
 		profilePlayer: 'Player',
 		profileNoSessions: 'No sessions recorded.',
 		profileSession: 'Session',
-		profileDownload: 'Download Report',
+		profileDownloadAI: 'Download AI Analysis',
+		profileDownloadGame: 'Download Game Data',
 		profileEmail: 'Email Report',
 		profileVAScaleTitle: 'VA Scale Game',
 		profileEngagementTitle: 'Engagement Game',
@@ -68,6 +69,8 @@ export const labels = {
 		profileHit: 'Hit',
 		profileYes: 'Yes',
 		profileNo: 'No',
+
+		logoutAria: 'Logout',
 	},
 
 	mi: {
@@ -112,7 +115,8 @@ export const labels = {
 		profilePlayer: 'Kaitākaro',
 		profileNoSessions: 'Kāore he wāhanga kua tuhia.',
 		profileSession: 'Wāhanga',
-		profileDownload: 'Tikiake Pūrongo',
+		profileDownloadAI: 'Tikiake Tātaritanga AI',
+		profileDownloadGame: 'Tikiake Raraunga Kēmu',
 		profileEmail: 'Tukua mā te Īmēra',
 		profileVAScaleTitle: 'Kēmu Ine Tirohanga',
 		profileEngagementTitle: 'Kēmu Whaiwhakaaro',
@@ -133,6 +137,8 @@ export const labels = {
 		profileHit: 'Pā atu',
 		profileYes: 'Āe',
 		profileNo: 'Kāo',
+
+		logoutAria: 'Takiputa',
 	},
 } as const;
 
