@@ -98,25 +98,12 @@ export const Profile = ({ user, onExit }: IProps) => {
 					const isExpanded = expandedSessions[masterId] ?? true;
 					return (
 						<div key={masterId} className='bg-white shadow-lg rounded-lg p-6 mb-10'>
-							<div className='flex justify-between items-center mb-4'>
-								<h2 className='text-xl font-bold text-indigo-700'>
-									{t.profileSession} #{idx + 1}
-								</h2>
-								<div className='space-x-2'>
-									{isExpanded && (
-										<>
-											<button className='bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded' onClick={() => handleDownloadAIAnalysis(masterId)}>
-												{t.profileDownloadAI}
-											</button>
-
-											<button className='bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded' onClick={() => handleDownloadGameData(masterId)}>
-												{t.profileDownloadGame}
-											</button>
-											<button className='bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded' onClick={() => handleEmailReport(masterId)}>
-												{t.profileEmail}
-											</button>
-										</>
-									)}
+							<div className='mb-4'>
+								{/* Title + Expand/Collapse */}
+								<div className='flex items-center justify-between'>
+									<h2 className='text-xl font-bold text-indigo-700'>
+										{t.profileSession} #{idx + 1}
+									</h2>
 									<button
 										className='p-1 rounded hover:bg-gray-200 transition'
 										onClick={() =>
@@ -129,6 +116,23 @@ export const Profile = ({ user, onExit }: IProps) => {
 										{isExpanded ? <ChevronUp className='w-5 h-5 text-gray-700' /> : <ChevronDown className='w-5 h-5 text-gray-700' />}
 									</button>
 								</div>
+
+								{/* Download buttons */}
+								{isExpanded && (
+									<div className='mt-2 flex flex-col sm:flex-row sm:justify-end sm:items-center gap-2'>
+										<button className='bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm sm:text-base sm:w-auto w-full' onClick={() => handleDownloadAIAnalysis(masterId)}>
+											{t.profileDownloadAI}
+										</button>
+
+										<button className='bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm sm:text-base sm:w-auto w-full' onClick={() => handleDownloadGameData(masterId)}>
+											{t.profileDownloadGame}
+										</button>
+
+										<button className='bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm sm:text-base sm:w-auto w-full' onClick={() => handleEmailReport(masterId)}>
+											{t.profileEmail}
+										</button>
+									</div>
+								)}
 							</div>
 
 							{isExpanded && (
@@ -143,42 +147,41 @@ export const Profile = ({ user, onExit }: IProps) => {
 												<br />
 												{t.profileEnd}: {group.scale.endTime ? new Date(group.scale.endTime).toLocaleString() : t.profileInProgress}
 											</p>
-
 											<p className='mt-2 text-sm text-gray-700'>
 												<b>{t.profileConfig}:</b> HoleSize = {group.scale.config.holeSize} mm, Ratio = {group.scale.config.ratio}, Gap = {group.scale.config.holeGap}
 												px, Distance = {group.scale.config.viewingDistanceCm} cm
 											</p>
-
 											<p className='mt-2 text-sm text-gray-700'>
 												<b>{t.profileScore}:</b> bestVA = {group.scale.score.bestVA}, finalVA = {group.scale.score.finalVA}, b = {group.scale.score.b}, n = {group.scale.score.n}
 											</p>
-
-											<table className='w-full text-sm mt-4 border'>
-												<thead>
-													<tr className='bg-gray-100'>
-														<th className='border p-1'>#</th>
-														<th className='border p-1'>{t.profileOuter}</th>
-														<th className='border p-1'>{t.profileInner}</th>
-														<th className='border p-1'>{t.profileRatio}</th>
-														<th className='border p-1'>{t.profileLogMAR}</th>
-														<th className='border p-1'>{t.profileResponse}</th>
-														<th className='border p-1'>{t.profileTime}</th>
-													</tr>
-												</thead>
-												<tbody>
-													{group.scale.logEntries.map((entry, i) => (
-														<tr key={i}>
-															<td className='border p-1'>{i + 1}</td>
-															<td className='border p-1'>{entry.outerDiameter.toFixed(1)}</td>
-															<td className='border p-1'>{entry.innerDiameter.toFixed(1)}</td>
-															<td className='border p-1'>{entry.ratio}</td>
-															<td className='border p-1'>{entry.logmar}</td>
-															<td className='border p-1'>{entry.userResponse || '-'}</td>
-															<td className='border p-1'>{new Date(entry.timestamp).toLocaleTimeString()}</td>
+											<div className='overflow-x-auto mt-4'>
+												<table className='min-w-[600px] text-sm border'>
+													<thead>
+														<tr className='bg-gray-100'>
+															<th className='border p-1'>#</th>
+															<th className='border p-1'>{t.profileOuter}</th>
+															<th className='border p-1'>{t.profileInner}</th>
+															<th className='border p-1'>{t.profileRatio}</th>
+															<th className='border p-1'>{t.profileLogMAR}</th>
+															<th className='border p-1'>{t.profileResponse}</th>
+															<th className='border p-1'>{t.profileTime}</th>
 														</tr>
-													))}
-												</tbody>
-											</table>
+													</thead>
+													<tbody>
+														{group.scale.logEntries.map((entry, i) => (
+															<tr key={i}>
+																<td className='border p-1'>{i + 1}</td>
+																<td className='border p-1'>{entry.outerDiameter.toFixed(1)}</td>
+																<td className='border p-1'>{entry.innerDiameter.toFixed(1)}</td>
+																<td className='border p-1'>{entry.ratio}</td>
+																<td className='border p-1'>{entry.logmar}</td>
+																<td className='border p-1'>{entry.userResponse || '-'}</td>
+																<td className='border p-1'>{new Date(entry.timestamp).toLocaleTimeString()}</td>
+															</tr>
+														))}
+													</tbody>
+												</table>
+											</div>{' '}
 										</div>
 									)}
 
