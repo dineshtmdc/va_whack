@@ -63,7 +63,7 @@ export const VAScaleControlPanel = ({ config, onChange }: IProps) => {
 					<div>
 						<label className='block text-sm font-medium text-gray-700'>Viewing Distance (cm)</label>
 						<select value={config.viewingDistanceCm} onChange={(e) => handleChange('viewingDistanceCm', e.target.value)} className='w-full mt-1 px-2 py-1 border rounded text-sm'>
-							{[50, 100, 150, 200, 250, 300, 350].map((val) => (
+							{[20, 30, 50, 100, 150, 200, 250, 300, 350].map((val) => (
 								<option key={val} value={val}>
 									{val} cm
 								</option>

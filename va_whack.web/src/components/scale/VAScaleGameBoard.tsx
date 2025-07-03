@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { FileText, X, Home, RotateCcw, ChevronRight, ChevronLeft, Settings } from 'lucide-react';
-import { type IVAScaleGameConfig, type IUserDetails, type IScaleLogEntry, type IScaleGameScore, type ResponseOption, type Phase, type ScaleMethod, useVAScaleGameSessionStore, GameService } from '../../shared';
-import { VAScaleChart, VAScaleControlPanel, VAScaleGameStatistics } from '..';
+import { type IVAScaleGameConfig, type IUserDetails, type IScaleLogEntry, type IScaleGameScore, type ResponseOption, type Phase, type ScaleMethod, useVAScaleGameSessionStore, GameService, useUIStore, labels } from '../../shared';
+import { VAScaleChart, VAScaleControlPanel } from '..';
 import { useGameMasterSessionStore } from '../../shared/zustand/game_master_store';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface IProps {
 	user: IUserDetails;
@@ -12,19 +13,41 @@ interface IProps {
 }
 
 export const VAScaleGameBoard = ({ user, onExit }: IProps) => {
-	const [config, setConfig] = useState<IVAScaleGameConfig>({
-		holeSize: 30,
-		minHoleSize: 1,
-		maxHoleSize: 30,
-		holeGap: 2,
-		ratio: 0.5,
-		innerColor: '#ffffff',
-		outerColor: '#666666',
-		bgColor: '#f0f0f0',
-		horizontalPadding: 50,
-		verticalPadding: 30,
-		viewingDistanceCm: 150,
-	});
+	const isMobile = useIsMobile();
+
+	const defaultConfig: IVAScaleGameConfig = isMobile
+		? {
+				holeSize: 16,
+				minHoleSize: 1,
+				maxHoleSize: 16,
+				holeGap: 1,
+				ratio: 0.5,
+				innerColor: '#ffffff',
+				outerColor: '#666666',
+				bgColor: '#f0f0f0',
+				horizontalPadding: 10,
+				verticalPadding: 10,
+				viewingDistanceCm: 20,
+		  }
+		: {
+				holeSize: 30,
+				minHoleSize: 1,
+				maxHoleSize: 30,
+				holeGap: 2,
+				ratio: 0.5,
+				innerColor: '#ffffff',
+				outerColor: '#666666',
+				bgColor: '#f0f0f0',
+				horizontalPadding: 50,
+				verticalPadding: 30,
+				viewingDistanceCm: 150,
+		  };
+
+	const [config, setConfig] = useState<IVAScaleGameConfig>(defaultConfig);
+
+	const lang = useUIStore((s) => s.lang);
+	const t = labels[lang];
+
 	const mmToPx = (mm: number) => mm * 3.78;
 	const toOdd = (n: number) => (n <= 1 ? 1 : n % 2 === 0 ? n - 1 : n);
 
@@ -243,14 +266,6 @@ export const VAScaleGameBoard = ({ user, onExit }: IProps) => {
 
 	return (
 		<div className='w-full h-screen relative'>
-			{/* {gameOverMessage && !scoreCalculated && (
-				<div className='absolute top-4 left-1/2 transform -translate-x-1/2 z-30'>
-					<button onClick={handleCalculateScore} className='bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded shadow'>
-						Calculate Score
-					</button>
-				</div>
-			)} */}
-
 			{/* Controls */}
 			<div className='absolute top-4 right-4 z-20 flex items-center space-x-2'>
 				<button onClick={() => setIsControlsExpanded((prev) => !prev)} className='bg-white p-2 rounded-full shadow hover:bg-gray-100'>
@@ -264,7 +279,7 @@ export const VAScaleGameBoard = ({ user, onExit }: IProps) => {
 						<button onClick={() => restart()} className='bg-white p-2 rounded-full shadow hover:bg-gray-100' title='Reset Game'>
 							<RotateCcw className='w-5 h-5' />
 						</button>
-						{logPanelOpen && <VAScaleGameStatistics isOpen={logPanelOpen} onClose={() => setLogPanelOpen(false)} />}
+						{/* {logPanelOpen && <VAScaleGameStatistics isOpen={logPanelOpen} onClose={() => setLogPanelOpen(false)} />} */}
 						{showChart && (
 							<div className='fixed left-0 w-full bg-white shadow-lg z-40'>
 								<VAScaleChart logEntries={logEntries} bestVA={calculatedScore?.bestVA} finalVA={calculatedScore?.finalVA} onClose={() => setShowChart(false)} />
@@ -315,14 +330,16 @@ export const VAScaleGameBoard = ({ user, onExit }: IProps) => {
 				{!gameOverMessage && (
 					<div className='absolute bottom-4 flex items-center gap-4'>
 						<button disabled={!allowResponse} onClick={() => handleResponse('I can see')} className='px-6 py-3 bg-green-600 text-white text-lg font-semibold rounded shadow disabled:opacity-50 disabled:cursor-not-allowed'>
-							I can see{(phase === 'bestline' || phase === 'counting') && ` (${trialResponses.length + 1}/5)`}
+							{t.canSee}
+							{(phase === 'bestline' || phase === 'counting') && ` (${trialResponses.length + 1}/5)`}
 						</button>
 						<button disabled={!allowResponse} onClick={() => handleResponse("I can't see")} className='px-6 py-3 bg-red-600 text-white text-lg font-semibold rounded shadow disabled:opacity-50 disabled:cursor-not-allowed'>
-							I can’t see{(phase === 'bestline' || phase === 'counting') && ` (${trialResponses.length + 1}/5)`}
+							{t.cantSee}
+							{(phase === 'bestline' || phase === 'counting') && ` (${trialResponses.length + 1}/5)`}
 						</button>
 						{bestlineFound && !gameOverMessage && (
 							<button onClick={() => setGameOverMessage('Assessment ended by user.')} className='px-6 py-3 bg-gray-500 text-white text-lg font-semibold rounded shadow hover:bg-gray-600'>
-								I Give Up
+								{t.giveUp}
 							</button>
 						)}
 					</div>
