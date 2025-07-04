@@ -1,10 +1,5 @@
-/**
- * eslint-disable @typescript-eslint/no-explicit-any
- *
- * @format
- */
-
 /** @format */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useEffect, useRef } from 'react';
 import * as am5 from '@amcharts/amcharts5';
@@ -107,9 +102,7 @@ export const VAScaleChart = ({ logEntries, bestVA, finalVA, onClose }: VAScaleCh
 			});
 		});
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const legendData: any[] = [];
-
+		// Highlight Best VA
 		if (bestVA !== undefined) {
 			const dataItem = yAxis.makeDataItem({ value: bestVA });
 			const range = yAxis.createAxisRange(dataItem);
@@ -128,9 +121,9 @@ export const VAScaleChart = ({ logEntries, bestVA, finalVA, onClose }: VAScaleCh
 				centerX: 0,
 				isMeasured: false,
 			});
-			legendData.push({ name: 'Best VA', fill: am5.color(0x22c55e), strokeDasharray: [4, 4] });
 		}
 
+		// Highlight Final VA
 		if (finalVA !== undefined) {
 			const dataItem = yAxis.makeDataItem({ value: finalVA });
 			const range = yAxis.createAxisRange(dataItem);
@@ -149,18 +142,7 @@ export const VAScaleChart = ({ logEntries, bestVA, finalVA, onClose }: VAScaleCh
 				centerX: 0,
 				isMeasured: false,
 			});
-			legendData.push({ name: 'Final VA', fill: am5.color(0x3b82f6), strokeDasharray: [6, 3] });
 		}
-
-		const legend = chart.children.push(
-			am5.Legend.new(root, {
-				centerX: am5.p50,
-				marginTop: 20,
-				layout: root.horizontalLayout,
-				x: am5.p50,
-			})
-		);
-		legend.data.setAll(legendData);
 
 		chart.set('cursor', am5xy.XYCursor.new(root, {}));
 
@@ -168,6 +150,27 @@ export const VAScaleChart = ({ logEntries, bestVA, finalVA, onClose }: VAScaleCh
 			root.dispose();
 		};
 	}, [logEntries, bestVA, finalVA, showChart]);
+
+	const CustomLegend = () => (
+		<div className='flex gap-4 px-4 py-2 border-t text-sm bg-white'>
+			<div className='flex items-center gap-2'>
+				<div className='w-4 h-4 bg-black rounded-sm border border-black' />
+				<span>I can see</span>
+			</div>
+			<div className='flex items-center gap-2'>
+				<div className='w-4 h-4 bg-white rounded-sm border border-black' />
+				<span>I can't see</span>
+			</div>
+			<div className='flex items-center gap-2'>
+				<div className='w-4 h-[3px] bg-green-500 border border-green-600 rounded-sm' />
+				<span className='text-green-700'>Best VA</span>
+			</div>
+			<div className='flex items-center gap-2'>
+				<div className='w-4 h-[3px] bg-blue-500 border border-blue-600 rounded-sm' />
+				<span className='text-blue-700'>Final VA</span>
+			</div>
+		</div>
+	);
 
 	const chartPanel = (
 		<div className='flex flex-col w-full h-full bg-white'>
@@ -186,6 +189,7 @@ export const VAScaleChart = ({ logEntries, bestVA, finalVA, onClose }: VAScaleCh
 					<div className='text-center text-sm text-gray-500 py-10 border rounded'>Chart will appear once the game starts.</div>
 				)}
 			</div>
+			<CustomLegend />
 		</div>
 	);
 
