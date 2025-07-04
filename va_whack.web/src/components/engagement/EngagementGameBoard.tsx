@@ -1,6 +1,6 @@
 /** @format */
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import hammerCursor from '../../assets/images/hammer_cursor.png';
 import { useEnagementGameSessionStore, type IAppearanceEvent, type IMole, type IUserDetails, type IEnagementGameConfig, GameService, type IEnagementScoreSummary } from '../../shared';
 import { Mole, EnagementGameStatistics, EnagementControlPanel } from '..';
@@ -99,31 +99,26 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	const [isControlsExpanded, setIsControlsExpanded] = useState(false);
 	const nextEventIdRef = useRef(1);
 	const { startSession, addEvents, updateEventById, endSession, resetCurrentSession } = useEnagementGameSessionStore();
-	const LEVEL_SEQUENCE = ['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard'];
+	const LEVEL_SEQUENCE = useMemo(() => ['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard'], []);
 	const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [showCountdown, setShowCountdown] = useState(false);
-	const [countdownNumber, setCountdownNumber] = useState<number | null>(null);
+
 	const [allLevelsComplete, setAllLevelsComplete] = useState(false);
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [comboCount, setComboCount] = useState(0);
 	const [showComboMessage, setShowComboMessage] = useState(false);
-
+	const [showCountdown, setShowCountdown] = useState(false);
+	const [countdownNumber, setCountdownNumber] = useState<number | null>(null);
 	const hitSoundRef = useRef<HTMLAudioElement | null>(null);
 	const missSoundRef = useRef<HTMLAudioElement | null>(null);
-
-	const [config, setConfig] = useState<IEnagementGameConfig>(isMobile ? MOBILE_GAME_LEVELS['Very Easy'].config : DESKTOP_GAME_LEVELS['Very Easy'].config);
-
-	useEffect(() => {
-		// Only update config if game hasn't started yet
-
-		if (!gameStarted) {
-			setConfig(isMobile ? MOBILE_GAME_LEVELS['Very Easy'].config : DESKTOP_GAME_LEVELS['Very Easy'].config);
-		}
-	}, [isMobile, gameStarted]);
-
 	console.log(comboCount);
 
-	const spawnMice = () => {
+	const [config, setConfig] = useState<IEnagementGameConfig>(
+		// Always provide a fallback value (doesn't matter if temporarily wrong)
+		DESKTOP_GAME_LEVELS['Very Easy'].config
+	);
+
+	const spawnMice = useCallback(() => {
 		const now = Date.now();
 		const occupied = new Set<string>();
 		const newMice: IMole[] = [];
@@ -186,7 +181,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 
 		addEvents(newEvents);
 		nextEventIdRef.current += newMice.length;
-	};
+	}, [addEvents, cols, config.fakeCount, config.mouseSize, rows]);
 
 	// useEffect 1
 	useEffect(() => {
@@ -233,7 +228,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 		}, config.spawnInterval);
 
 		return () => clearInterval(interval);
-	}, [gameStarted, rows, cols, config.spawnInterval, gameOver, userClickedThisCycle, prevMouseIds, showComboMessage]);
+	}, [gameStarted, rows, cols, config.spawnInterval, gameOver, userClickedThisCycle, prevMouseIds, showComboMessage, isSubmitting, showCountdown, spawnMice]);
 
 	// useEffect 4
 	useEffect(() => {
@@ -272,7 +267,112 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 		}, 1000);
 
 		return () => clearInterval(timer);
-	}, [timeLeft, gameStarted, isSubmitting]);
+	}, [timeLeft, gameStarted, isSubmitting, endSession, currentLevelIndex, LEVEL_SEQUENCE.length]);
+
+	const spawnMiceWithSize = useCallback(
+		(customRows: number, customCols: number, fakeCount: number) => {
+			const now = Date.now();
+			const occupied = new Set<string>();
+			const newMice: IMole[] = [];
+
+			let row = 0,
+				col = 0,
+				key = '';
+			do {
+				row = Math.floor(Math.random() * customRows);
+				col = Math.floor(Math.random() * customCols);
+				key = `${row},${col}`;
+			} while (occupied.has(key));
+			occupied.add(key);
+
+			const isMainFake = Math.random() < 0.2;
+
+			newMice.push({
+				id: nextEventIdRef.current,
+				row,
+				col,
+				mole_type: isMainFake ? 'fake-mole' : 'mole',
+			});
+
+			for (let i = 1; i <= fakeCount; i++) {
+				let fakeRow = 0,
+					fakeCol = 0,
+					fakeKey = '';
+				do {
+					fakeRow = Math.floor(Math.random() * customRows);
+					fakeCol = Math.floor(Math.random() * customCols);
+					fakeKey = `${fakeRow},${fakeCol}`;
+				} while (occupied.has(fakeKey));
+				occupied.add(fakeKey);
+
+				newMice.push({
+					id: nextEventIdRef.current + i,
+					row: fakeRow,
+					col: fakeCol,
+					mole_type: 'fake-mole',
+				});
+			}
+
+			setMice(newMice);
+			setPrevMouseIds(newMice.map((m) => m.id));
+			setUserClickedThisCycle(false);
+
+			const newEvents: IAppearanceEvent[] = newMice.map((m) => ({
+				id: m.id,
+				targetType: m.mole_type,
+				mouseSize: config.mouseSize,
+				row: m.row,
+				col: m.col,
+				quadrant: getQuadrant(customRows, customCols, m.row, m.col),
+				appearTime: now,
+				clicked: false,
+			}));
+
+			addEvents(newEvents);
+			nextEventIdRef.current += newMice.length;
+		},
+		[addEvents, config.mouseSize]
+	);
+
+	// function 1
+	const handleStartGame = useCallback(
+		(levelName: string) => {
+			if (scoreCalculated && !scoreDialogAcknowledged) return;
+
+			const levelData = (isMobile ? MOBILE_GAME_LEVELS : DESKTOP_GAME_LEVELS)[levelName];
+			setConfig(levelData.config);
+
+			const usableWidth = window.innerWidth - 32;
+			const usableHeight = window.innerHeight - 96;
+
+			const newCols = Math.floor(usableWidth / (levelData.config.holeSize + levelData.config.holeGap));
+			const newRows = Math.floor(usableHeight / (levelData.config.holeSize + levelData.config.holeGap));
+
+			setCols(newCols);
+			setRows(newRows);
+			setTimeLeft(levelData.duration);
+			setHitCount(0);
+			setMissCount(0);
+			setGameOver(false);
+			setScore(null);
+			setScoreDialogOpen(false);
+			setScoreDialogAcknowledged(false);
+			setScoreCalculated(false);
+			setComboCount(0);
+			setUserClickedThisCycle(false);
+			setMice([]);
+			setPrevMouseIds([]);
+			resetCurrentSession();
+			const masterSessionId = useGameMasterSessionStore.getState().currentSession.sessionId;
+			startSession(user.email, levelData.config, masterSessionId);
+			setGameStarted(true);
+
+			setTimeout(() => {
+				spawnMiceWithSize(newRows, newCols, levelData.config.fakeCount);
+			}, 100);
+		},
+		[isMobile]
+	);
 
 	// useEffect 5 - Show 5,4,3,2,1 countdown with level name
 	useEffect(() => {
@@ -289,115 +389,14 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 				clearInterval(interval);
 				setShowCountdown(false);
 				setCountdownNumber(null);
-
-				// directly pass nextLevel so it doesn't rely on async setSelectedLevel
-				handleStartGame(nextLevel);
+				handleStartGame(nextLevel); // 👈 CAUSES DOUBLE START
 			} else {
 				setCountdownNumber(count);
 			}
 		}, 1000);
 
 		return () => clearInterval(interval);
-	}, [currentLevelIndex]);
-
-	// function 1
-	const handleStartGame = (levelName: string) => {
-		if (scoreCalculated && !scoreDialogAcknowledged) return;
-
-		const levelData = (isMobile ? MOBILE_GAME_LEVELS : DESKTOP_GAME_LEVELS)[levelName];
-		setConfig(levelData.config);
-
-		const usableWidth = window.innerWidth - 32;
-		const usableHeight = window.innerHeight - 96;
-
-		const newCols = Math.floor(usableWidth / (levelData.config.holeSize + levelData.config.holeGap));
-		const newRows = Math.floor(usableHeight / (levelData.config.holeSize + levelData.config.holeGap));
-
-		setCols(newCols);
-		setRows(newRows);
-		setTimeLeft(levelData.duration);
-		setHitCount(0);
-		setMissCount(0);
-		setGameOver(false);
-		setScore(null);
-		setScoreDialogOpen(false);
-		setScoreDialogAcknowledged(false);
-		setScoreCalculated(false);
-		setComboCount(0);
-		setUserClickedThisCycle(false);
-		setMice([]);
-		setPrevMouseIds([]);
-		resetCurrentSession();
-		const masterSessionId = useGameMasterSessionStore.getState().currentSession.sessionId;
-		startSession(user.email, levelData.config, masterSessionId);
-		setGameStarted(true);
-
-		setTimeout(() => {
-			spawnMiceWithSize(newRows, newCols, levelData.config.fakeCount);
-		}, 100);
-	};
-
-	const spawnMiceWithSize = (customRows: number, customCols: number, fakeCount: number) => {
-		const now = Date.now();
-		const occupied = new Set<string>();
-		const newMice: IMole[] = [];
-
-		let row = 0,
-			col = 0,
-			key = '';
-		do {
-			row = Math.floor(Math.random() * customRows);
-			col = Math.floor(Math.random() * customCols);
-			key = `${row},${col}`;
-		} while (occupied.has(key));
-		occupied.add(key);
-
-		const isMainFake = Math.random() < 0.2;
-
-		newMice.push({
-			id: nextEventIdRef.current,
-			row,
-			col,
-			mole_type: isMainFake ? 'fake-mole' : 'mole',
-		});
-
-		for (let i = 1; i <= fakeCount; i++) {
-			let fakeRow = 0,
-				fakeCol = 0,
-				fakeKey = '';
-			do {
-				fakeRow = Math.floor(Math.random() * customRows);
-				fakeCol = Math.floor(Math.random() * customCols);
-				fakeKey = `${fakeRow},${fakeCol}`;
-			} while (occupied.has(fakeKey));
-			occupied.add(fakeKey);
-
-			newMice.push({
-				id: nextEventIdRef.current + i,
-				row: fakeRow,
-				col: fakeCol,
-				mole_type: 'fake-mole',
-			});
-		}
-
-		setMice(newMice);
-		setPrevMouseIds(newMice.map((m) => m.id));
-		setUserClickedThisCycle(false);
-
-		const newEvents: IAppearanceEvent[] = newMice.map((m) => ({
-			id: m.id,
-			targetType: m.mole_type,
-			mouseSize: config.mouseSize,
-			row: m.row,
-			col: m.col,
-			quadrant: getQuadrant(customRows, customCols, m.row, m.col),
-			appearTime: now,
-			clicked: false,
-		}));
-
-		addEvents(newEvents);
-		nextEventIdRef.current += newMice.length;
-	};
+	}, [LEVEL_SEQUENCE, currentLevelIndex, handleStartGame]);
 
 	// function 2
 	const resetGame = () => {
@@ -413,6 +412,11 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 		setScoreDialogAcknowledged(false);
 		setGameStarted(false);
 	};
+
+	if (isMobile === null) {
+		// Still determining device type
+		return <div className='w-full h-screen flex items-center justify-center bg-white text-gray-600 text-lg'>Loading...</div>;
+	}
 
 	return (
 		<div
@@ -454,7 +458,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 			{showControlPanel && <EnagementControlPanel config={config} onChange={(u) => setConfig((p) => ({ ...p, ...u }))} />}
 
 			{/* HUD */}
-			<div className={`absolute z-20 text-black text-lg flex items-center space-x-6 ${gameOver || isHoveringHud ? 'opacity-100' : 'opacity-0'} left-4 top-20 sm:top-2`} onMouseEnter={() => setIsHoveringHud(true)} onMouseLeave={() => setIsHoveringHud(false)}>
+			<div className={`absolute z-20 text-black text-lg flex items-center space-x-6 ${gameOver || isHoveringHud ? 'opacity-100' : 'opacity-0'} left-4 top-12 sm:top-4`} onMouseEnter={() => setIsHoveringHud(true)} onMouseLeave={() => setIsHoveringHud(false)}>
 				<p>Time Left: {formatTime(timeLeft)}</p>
 				<p>Hits: {hitCount}</p>
 				<p>Misses: {missCount}</p>
