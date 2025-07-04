@@ -1,20 +1,19 @@
 /** @format */
 
-// /src/components/hooks/useIsMobile.ts
+// hooks/useIsMobile.ts
 import { useEffect, useState } from 'react';
 
-export const useIsMobile = (breakpoint = 768) => {
-	const [isMobile, setIsMobile] = useState(false);
+export const useIsMobile = () => {
+	const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
 	useEffect(() => {
-		const handleResize = () => {
-			setIsMobile(window.innerWidth <= breakpoint);
+		const checkMobile = () => {
+			setIsMobile(window.innerWidth <= 768);
 		};
-
-		handleResize(); // set on mount
-		window.addEventListener('resize', handleResize);
-		return () => window.removeEventListener('resize', handleResize);
-	}, [breakpoint]);
+		checkMobile();
+		window.addEventListener('resize', checkMobile);
+		return () => window.removeEventListener('resize', checkMobile);
+	}, []);
 
 	return isMobile;
 };
