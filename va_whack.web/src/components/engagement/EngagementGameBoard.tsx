@@ -98,7 +98,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	const [scoreDialogAcknowledged, setScoreDialogAcknowledged] = useState(false);
 	const [isControlsExpanded, setIsControlsExpanded] = useState(false);
 	const nextEventIdRef = useRef(1);
-	const { startSession, addEvents, updateEventById, endSession, resetCurrentSession } = useEnagementGameSessionStore();
+	const { startSession, addEvents, updateEventById, endSession, resetCurrentSession, getLastSession } = useEnagementGameSessionStore();
 	const LEVEL_SEQUENCE = useMemo(() => ['Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard'], []);
 	const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
 	const [isSubmitting, setIsSubmitting] = useState(false);
@@ -232,7 +232,8 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 
 	// useEffect 4
 	useEffect(() => {
-		if (!gameStarted || isSubmitting) return;
+		const lastSession = getLastSession();
+		if (!gameStarted || isSubmitting || !lastSession) return;
 
 		if (timeLeft <= 0) {
 			setGameOver(true);
@@ -242,7 +243,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 			endSession();
 
 			setIsSubmitting(true);
-			GameService.submitEnagementGame(useEnagementGameSessionStore.getState().currentSession!).then((result) => {
+			GameService.submitEnagementGame(lastSession).then((result) => {
 				if (result) {
 					setScore(result);
 					setScoreDialogOpen(true);
@@ -267,7 +268,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 		}, 1000);
 
 		return () => clearInterval(timer);
-	}, [timeLeft, gameStarted, isSubmitting, endSession, currentLevelIndex, LEVEL_SEQUENCE.length]);
+	}, [timeLeft, gameStarted, isSubmitting, endSession, currentLevelIndex, LEVEL_SEQUENCE.length, getLastSession]);
 
 	const spawnMiceWithSize = useCallback(
 		(customRows: number, customCols: number, fakeCount: number) => {
@@ -594,7 +595,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 			)}
 			{showComboMessage && (
 				<div className='absolute inset-0 z-40 bg-green-400/80 pointer-events-none overflow-hidden'>
-					{/* 🔥 Define the icon set */}
+					{/* 🔥 Combo Icons */}
 					{(() => {
 						const comboIcons = ['🔥', '💥', '⚡', '✨', '🌟', '🎯', '💫'];
 
@@ -607,7 +608,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 							return (
 								<span
 									key={i}
-									className='absolute text-4xl animate-glow'
+									className='absolute text-3xl md:text-4xl animate-glow'
 									style={{
 										top: `${top}%`,
 										left: `${left}%`,
@@ -620,11 +621,12 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 					})()}
 
 					{/* 🎯 Centered Combo Message */}
-					<div className='absolute inset-0 flex items-center justify-center'>
-						<div className='text-7xl font-bold text-orange-600 animate-pulse drop-shadow-lg'>🔥 Combo Streak! 5 Hits in a Row! 🔥</div>
+					<div className='absolute inset-0 flex items-center justify-center p-4'>
+						<div className='text-3xl md:text-5xl font-bold text-orange-600 animate-pulse drop-shadow-lg text-center max-w-xs md:max-w-none'>🔥 Combo Streak! 5 Hits in a Row! 🔥</div>
 					</div>
 				</div>
 			)}
+
 			{allLevelsComplete && (
 				<div className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center'>
 					<div className='bg-white rounded-lg shadow-lg p-6 max-w-sm text-center'>

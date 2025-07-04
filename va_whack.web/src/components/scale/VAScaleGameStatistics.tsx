@@ -1,7 +1,7 @@
 /** @format */
 
 import { Dialog, DialogTitle } from '@headlessui/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useVAScaleGameSessionStore } from '../../shared';
 
 interface IProps {
@@ -11,10 +11,19 @@ interface IProps {
 
 export const VAScaleGameStatistics = ({ isOpen, onClose }: IProps) => {
 	const { sessionHistory } = useVAScaleGameSessionStore();
+	const sessions = sessionHistory ?? [];
+
 	const [selectedTab, setSelectedTab] = useState(0);
 
-	const sessions = sessionHistory ?? [];
-	const current = sessions[selectedTab];
+	// Keep selectedTab within bounds if sessions are updated
+	useEffect(() => {
+		if (selectedTab >= sessions.length) {
+			setSelectedTab(Math.max(0, sessions.length - 1));
+		}
+	}, [sessions.length, selectedTab]);
+
+	const current = sessions.length > 0 && selectedTab >= 0 && selectedTab < sessions.length ? sessions[selectedTab] : null;
+	const logEntries = current?.logEntries ?? [];
 
 	return (
 		<Dialog open={isOpen} onClose={onClose} className='relative z-50'>
@@ -42,13 +51,13 @@ export const VAScaleGameStatistics = ({ isOpen, onClose }: IProps) => {
 						{current?.score && (
 							<div className='mb-2 text-sm px-1'>
 								<p>
-									<strong>Best VA:</strong> {current.score.bestVA.toFixed(2)} | <strong>Final VA:</strong> {current.score.finalVA.toFixed(2)} | <strong>Entries:</strong> {current.score.n} | <strong>“I can see”:</strong> {current.score.b}
+									<strong>Best VA:</strong> {current.score.bestVA != null ? current.score.bestVA.toFixed(2) : 'N/A'} | <strong>Final VA:</strong> {current.score.finalVA != null ? current.score.finalVA.toFixed(2) : 'N/A'} | <strong>Entries:</strong> {current.score.n} | <strong>“I can see”:</strong> {current.score.b}
 								</p>
 							</div>
 						)}
 
 						{/* Table container */}
-						{current?.logEntries?.length > 0 ? (
+						{logEntries.length > 0 ? (
 							<div className='overflow-auto border rounded max-h-[60vh]'>
 								<table className='min-w-full text-sm border-separate border-spacing-0 text-center'>
 									<thead className='sticky top-0 bg-gray-100 text-gray-700 shadow-sm'>
@@ -63,7 +72,7 @@ export const VAScaleGameStatistics = ({ isOpen, onClose }: IProps) => {
 										</tr>
 									</thead>
 									<tbody>
-										{current.logEntries.map((entry, idx) => (
+										{logEntries.map((entry, idx) => (
 											<tr key={entry.timestamp} className='hover:bg-gray-50'>
 												<td className='border px-3 py-1'>{idx + 1}</td>
 												<td className='border px-3 py-1'>{entry.logmar.toFixed(2)}</td>

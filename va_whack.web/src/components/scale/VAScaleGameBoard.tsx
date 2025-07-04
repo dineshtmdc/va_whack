@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FileText, X, Home, RotateCcw, ChevronRight, ChevronLeft, Settings } from 'lucide-react';
 import { type IVAScaleGameConfig, type IUserDetails, type IScaleLogEntry, type IScaleGameScore, type ResponseOption, type Phase, type ScaleMethod, useVAScaleGameSessionStore, GameService, useUIStore, labels } from '../../shared';
-import { VAScaleChart, VAScaleControlPanel } from '..';
+import { VAScaleChart, VAScaleControlPanel, VAScaleGameStatistics } from '..';
 import { useGameMasterSessionStore } from '../../shared/zustand/game_master_store';
 import { useIsMobile } from '../hooks/useIsMobile';
 
@@ -118,11 +118,27 @@ export const VAScaleGameBoard = ({ user, onExit }: IProps) => {
 		setRows(toOdd(Math.floor(usableHeight / cellSize)));
 	};
 
-	useEffect(updateGridSize, [currentLogmar, config.holeGap, config.verticalPadding, config.horizontalPadding, config.viewingDistanceCm]);
+	useEffect(() => {
+		// Wait for next animation frame to ensure layout is settled
+		requestAnimationFrame(() => {
+			updateGridSize();
+		});
+	}, [config]);
 
 	useEffect(() => {
 		window.addEventListener('resize', updateGridSize);
 		return () => window.removeEventListener('resize', updateGridSize);
+	}, []);
+
+	useEffect(() => {
+		const handleResize = () => updateGridSize();
+		window.addEventListener('resize', handleResize);
+		window.addEventListener('orientationchange', handleResize); // for mobile
+		updateGridSize(); // initial call
+		return () => {
+			window.removeEventListener('resize', handleResize);
+			window.removeEventListener('orientationchange', handleResize);
+		};
 	}, []);
 
 	useEffect(() => {
@@ -305,6 +321,8 @@ export const VAScaleGameBoard = ({ user, onExit }: IProps) => {
 			</div>
 
 			{showControlPanel && <VAScaleControlPanel config={config} onChange={(u) => setConfig((p) => ({ ...p, ...u }))} />}
+
+			{logPanelOpen && <VAScaleGameStatistics isOpen={logPanelOpen} onClose={() => setLogPanelOpen(false)} />}
 
 			{/* Grid & Buttons */}
 			<div className='w-full h-full flex flex-col items-center justify-center' style={{ backgroundColor: config.bgColor, paddingLeft: logPanelOpen ? '320px' : '0' }}>
