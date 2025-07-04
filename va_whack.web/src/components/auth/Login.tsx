@@ -116,12 +116,10 @@ export const Login = () => {
 			</div>
 
 			{/* Language toggle */}
-			<div className='absolute top-4 right-4 z-10'>
-				<button onClick={toggleLang} className='absolute top-4 left-4 p-2 bg-white rounded shadow hover:bg-gray-100 flex items-center gap-2'>
-					<Globe className='w-4 h-4' />
-					{t.langToggle}
-				</button>{' '}
-			</div>
+			<button onClick={toggleLang} className='absolute top-4 left-4 z-10 p-2 bg-white rounded shadow hover:bg-gray-100 flex items-center gap-2'>
+				<Globe className='w-4 h-4' />
+				{t.langToggle}
+			</button>
 
 			<h1 className='text-4xl font-extrabold text-blue-800 mb-2 text-center z-10'>{t.centerTitle}</h1>
 			<h2 className='text-xl font-semibold text-green-600 mb-6 z-10'>{t.centerSubtitle}</h2>
