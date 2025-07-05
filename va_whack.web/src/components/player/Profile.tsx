@@ -1,7 +1,7 @@
 /** @format */
 
-import { useState, useMemo } from 'react';
-import { useVAScaleGameSessionStore, useEnagementGameSessionStore, type IUserDetails, type IScaleGameSession, type IEnagementGameSession, labels } from '../../shared';
+import { useState, useMemo, useEffect } from 'react';
+import { useVAScaleGameSessionStore, useEnagementGameSessionStore, GameService, type IUserDetails, type IScaleGameSession, type IEnagementGameSession, labels } from '../../shared';
 
 import { Timer, BarChart3, Home, ChevronDown, ChevronUp, Globe } from 'lucide-react';
 
@@ -23,11 +23,27 @@ export const Profile = ({ user, onExit }: IProps) => {
 	const currentEngagementSession = useEnagementGameSessionStore((s) => s.currentSession);
 	const engagementHistory = useEnagementGameSessionStore((s) => s.sessionHistory);
 
-	const [scaleSessionsFromDb] = useState<IScaleGameSession[]>([]);
-	const [engagementSessionsFromDb] = useState<IEnagementGameSession[]>([]);
+	const [scaleSessionsFromDb, setScaleSessionsFromDb] = useState<IScaleGameSession[]>([]);
+	const [engagementSessionsFromDb, setEngagementSessionsFromDb] = useState<IEnagementGameSession[]>([]);
 
 	const allScaleSessions: IScaleGameSession[] = [...(currentScaleSession ? [currentScaleSession] : []), ...scaleHistory, ...scaleSessionsFromDb];
 	const allEngagementSessions: IEnagementGameSession[] = [...(currentEngagementSession ? [currentEngagementSession] : []), ...engagementHistory, ...engagementSessionsFromDb];
+
+	useEffect(() => {
+		const fetchGameHistory = async () => {
+			try {
+				const history = await GameService.getPlayerGameHistory();
+				debugger
+				if (history) {
+					setScaleSessionsFromDb(history.scaleGames || []);
+					setEngagementSessionsFromDb(history.enagementGames || []);
+				}
+			} catch (error) {
+				console.error('Error fetching game history:', error);
+			}
+		};
+		fetchGameHistory();
+	 }, []);
 
 	const groupedByMasterSession = useMemo(() => {
 		const allSessions = [...allScaleSessions, ...allEngagementSessions];

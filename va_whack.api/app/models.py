@@ -56,6 +56,7 @@ class VAScaleGameSession(Base):
     __tablename__ = "va_scale_game_sessions"
     id = Column(Integer, primary_key=True, index=True)
     player_id = Column(Integer, ForeignKey("players.id"))
+    master_session_id = Column(String, nullable=True)
     start_time = Column(DateTime(timezone=True))
     end_time = Column(DateTime(timezone=True))
     
@@ -112,6 +113,7 @@ class EngagementGameSession(Base):
     id = Column(Integer, primary_key=True, index=True)
     player_id = Column(Integer, ForeignKey("players.id"))
     game_id = Column(String)
+    master_session_id = Column(String, nullable=True)
     start_time = Column(DateTime(timezone=True))
     end_time = Column(DateTime(timezone=True))
     player = relationship("Player", back_populates="engagement_game_sessions")

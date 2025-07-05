@@ -59,12 +59,12 @@ def submit_engagement_game(
     
     engagement_game_repo.save_score(db, session_id=new_session.id, score_data=analysis_results)
     
-    background_tasks.add_task(process_and_send_report, db, current_player, analysis_results)
+    # background_tasks.add_task(process_and_send_report, db, current_player, analysis_results)
     
     return analysis_results
 
 # Retrieves the complete game session history for the authenticated player.
-@router.get("/get-game-history", response_model=schemas.GameHistoryResponse)
+@router.get("/get-game-history")
 def get_session_history(
     db: Session = Depends(get_db),
     current_player: models.Player = Depends(get_current_player)
@@ -76,6 +76,5 @@ def get_session_history(
 
     return {
         "scaleGames": scale_games,
-        "engagementGames": engagement_games,
-        "va_okn_fast_mode": []
+        "engagementGames": engagement_games       
     }
