@@ -3,6 +3,7 @@
 # ==============================================================================
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
+from app.utils.mapper import map_game_history
 
 from ... import schemas, models
 from ...repository import scale_game as scale_game_repo, engagement_game as engagement_game_repo
@@ -74,7 +75,4 @@ def get_session_history(
     scale_games = db.query(models.VAScaleGameSession).filter_by(player_id=current_player.id).all()
     engagement_games = db.query(models.EngagementGameSession).filter_by(player_id=current_player.id).all()
 
-    return {
-        "scaleGames": scale_games,
-        "engagementGames": engagement_games       
-    }
+    return map_game_history(scale_games, engagement_games)

@@ -10,6 +10,7 @@ def create_full_session(db: Session, player_id: int, session_data: schemas.Engag
     db_session = models.EngagementGameSession(
         player_id=player_id,
         game_id=session_data.gameId,
+        master_session_id = session_data.masterSessionId,
         start_time=datetime.fromtimestamp(session_data.startTime / 1000, tz=timezone.utc),
         end_time=datetime.fromtimestamp(session_data.endTime / 1000, tz=timezone.utc) if session_data.endTime else None
     )

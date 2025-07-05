@@ -5,6 +5,7 @@
 
 from pydantic import BaseModel, EmailStr,Field
 from typing import List, Optional, Dict, Any
+from pydantic.alias_generators import to_camel
 from datetime import datetime
 
 # ==============================================================================
@@ -65,27 +66,38 @@ class Token(BaseModel):
 
 # --- VA Scale Game ---
 class VAScaleGameConfig(BaseModel):
-    hole_size: int = Field(..., alias="holeSize")
-    min_hole_size: int = Field(..., alias="minHoleSize")
-    max_hole_size: int = Field(..., alias="maxHoleSize")
-    hole_gap: int = Field(..., alias="holeGap")
+    holeSize: int
+    minHoleSize: int
+    maxHoleSize: int
     ratio: float
-    inner_color: str = Field(..., alias="innerColor")
-    outer_color: str = Field(..., alias="outerColor")
-    bg_color: str = Field(..., alias="bgColor")
-    horizontal_padding: int = Field(..., alias="horizontalPadding")
-    vertical_padding: int = Field(..., alias="verticalPadding")
-    viewing_distance_cm: int = Field(..., alias="viewingDistanceCm")
+    innerColor: str
+    outerColor: str
+    bgColor: str
+    holeGap: int
+    verticalPadding: int
+    horizontalPadding: int
+    viewingDistanceCm: int
+
+    model_config = {
+        "from_attributes": True,            
+        "alias_generator": to_camel,         
+        "populate_by_name": True,           
+    }
 
 
 class ScaleLogEntry(BaseModel):
     timestamp: int
-    outer_diameter: float = Field(..., alias="outerDiameter")
-    inner_diameter: float = Field(..., alias="innerDiameter")
+    outer_diameter: float 
+    inner_diameter: float 
     ratio: float
-    scale_method: str = Field(..., alias="scaleMethod")
+    scale_method: str 
     logmar: float
-    user_response: str = Field(..., alias="userResponse")
+    user_response: str 
+    model_config = {
+        "from_attributes": True,            
+        "alias_generator": to_camel,         
+        "populate_by_name": True,           
+    }
 
 class VAScaleGameSessionCreate(BaseModel):
     
@@ -155,6 +167,7 @@ class EngagementScoreSummary(BaseModel):
     totalMoleTrials: int
     totalRabbitTrials: int
 
+
 # --- General Session Response ---
 class SessionSubmitResponse(BaseModel):
     session_id: int
@@ -184,5 +197,3 @@ class GameSessionRead(BaseModel):
 class GameHistoryResponse(BaseModel):
     scaleGames: List[VAScaleGameSessionCreate]
     engagementGames: List[EngagementGameSessionCreate]
-    # Add other game types here as needed
-    va_okn_fast_mode: List[GameSessionRead] = []
