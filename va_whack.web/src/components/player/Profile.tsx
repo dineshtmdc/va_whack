@@ -33,7 +33,6 @@ export const Profile = ({ user, onExit }: IProps) => {
 		const fetchGameHistory = async () => {
 			try {
 				const history = await GameService.getPlayerGameHistory();
-				debugger
 				if (history) {
 					setScaleSessionsFromDb(history.scaleGames || []);
 					setEngagementSessionsFromDb(history.enagementGames || []);
