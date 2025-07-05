@@ -231,44 +231,87 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	}, [gameStarted, rows, cols, config.spawnInterval, gameOver, userClickedThisCycle, prevMouseIds, showComboMessage, isSubmitting, showCountdown, spawnMice]);
 
 	// useEffect 4
+	// useEffect(() => {
+	// 	const lastSession = getLastSession();
+	// 	if (!gameStarted || isSubmitting || !lastSession) return;
+
+	// 	if (timeLeft <= 0) {
+	// 		setGameOver(true);
+	// 		setGameStarted(false);
+	// 		setMice([]);
+	// 		setPrevMouseIds([]);
+	// 		endSession();
+
+	// 		setIsSubmitting(true);
+	// 		GameService.submitEnagementGame(lastSession).then((result) => {
+	// 			if (result) {
+	// 				setScore(result);
+	// 				setScoreDialogOpen(true);
+	// 				setScoreCalculated(true);
+	// 				setScoreDialogAcknowledged(false);
+	// 			}
+	// 			setIsSubmitting(false);
+
+	// 			setTimeout(() => {
+	// 				if (currentLevelIndex + 1 >= LEVEL_SEQUENCE.length) {
+	// 					setAllLevelsComplete(true);
+	// 					useGameMasterSessionStore.getState().markEngagementComplete();
+	// 				} else {
+	// 					setCurrentLevelIndex((prev) => prev + 1);
+	// 				}
+	// 			}, 1000);
+	// 		});
+	// 	}
+
+	// 	const timer = setInterval(() => {
+	// 		setTimeLeft((prev) => prev - 1);
+	// 	}, 1000);
+
+	// 	return () => clearInterval(timer);
+	// }, [timeLeft, gameStarted, isSubmitting, endSession, currentLevelIndex, LEVEL_SEQUENCE.length, getLastSession]);
+
 	useEffect(() => {
-		const lastSession = getLastSession();
-		if (!gameStarted || isSubmitting || !lastSession) return;
-
-		if (timeLeft <= 0) {
-			setGameOver(true);
-			setGameStarted(false);
-			setMice([]);
-			setPrevMouseIds([]);
-			endSession();
-
-			setIsSubmitting(true);
-			GameService.submitEnagementGame(lastSession).then((result) => {
-				if (result) {
-					setScore(result);
-					setScoreDialogOpen(true);
-					setScoreCalculated(true);
-					setScoreDialogAcknowledged(false);
-				}
-				setIsSubmitting(false);
-
-				setTimeout(() => {
-					if (currentLevelIndex + 1 >= LEVEL_SEQUENCE.length) {
-						setAllLevelsComplete(true);
-						useGameMasterSessionStore.getState().markEngagementComplete();
-					} else {
-						setCurrentLevelIndex((prev) => prev + 1);
-					}
-				}, 1000);
-			});
-		}
+		if (!gameStarted || gameOver || isSubmitting || showCountdown) return;
 
 		const timer = setInterval(() => {
 			setTimeLeft((prev) => prev - 1);
 		}, 1000);
 
 		return () => clearInterval(timer);
-	}, [timeLeft, gameStarted, isSubmitting, endSession, currentLevelIndex, LEVEL_SEQUENCE.length, getLastSession]);
+	}, [gameStarted, gameOver, isSubmitting, showCountdown]);
+
+	useEffect(() => {
+		if (timeLeft > 0 || !gameStarted || gameOver || isSubmitting) return;
+
+		setGameOver(true);
+		setGameStarted(false);
+		setMice([]);
+		setPrevMouseIds([]);
+		endSession();
+
+		const lastSession = getLastSession();
+		if (!lastSession) return;
+
+		setIsSubmitting(true);
+		GameService.submitEnagementGame(lastSession).then((result) => {
+			if (result) {
+				setScore(result);
+				setScoreDialogOpen(true);
+				setScoreCalculated(true);
+				setScoreDialogAcknowledged(false);
+			}
+			setIsSubmitting(false);
+
+			setTimeout(() => {
+				if (currentLevelIndex + 1 >= LEVEL_SEQUENCE.length) {
+					setAllLevelsComplete(true);
+					useGameMasterSessionStore.getState().markEngagementComplete();
+				} else {
+					setCurrentLevelIndex((prev) => prev + 1);
+				}
+			}, 1000);
+		});
+	}, [timeLeft, gameStarted, gameOver, isSubmitting, endSession, currentLevelIndex, LEVEL_SEQUENCE.length, getLastSession]);
 
 	const spawnMiceWithSize = useCallback(
 		(customRows: number, customCols: number, fakeCount: number) => {
