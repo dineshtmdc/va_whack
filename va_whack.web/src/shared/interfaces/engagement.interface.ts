@@ -15,6 +15,7 @@ export interface IMole {
 	row: number;
 	col: number;
 	mole_type: 'mole' | 'fake-mole';
+	appearTime: number;
 }
 
 export interface IEnagementGameConfig {
