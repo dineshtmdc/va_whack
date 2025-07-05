@@ -10,6 +10,7 @@ def create_full_session(db: Session, player_id: int, session_data: schemas.VASca
     db_session = models.VAScaleGameSession(
         player_id=player_id,
         start_time=datetime.fromtimestamp(session_data.startTime / 1000, tz=timezone.utc),
+        master_session_id = session_data.masterSessionId,
         end_time=datetime.fromtimestamp(session_data.endTime / 1000, tz=timezone.utc) if session_data.endTime else None
     )
     db.add(db_session)
