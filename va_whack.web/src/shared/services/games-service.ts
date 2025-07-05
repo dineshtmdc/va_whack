@@ -35,7 +35,7 @@ export const GameService = {
 			const response = await apiClient.post(url, data);
 			return response.data as IEnagementScoreSummary;
 		} catch (error) {
-			console.error(`Error submitting VA Scale Game:`, error);
+			console.error(`Error submitting Enagement Game:`, error);
 			return undefined;
 		}
 	},
@@ -43,13 +43,13 @@ export const GameService = {
 	/**
 	 * Submit Current Enagement Game
 	 */
-	async getPlayerGameHistory(email: string): Promise<IGameHistory | undefined> {
+	async getPlayerGameHistory(): Promise<IGameHistory | undefined> {
 		try {
 			const url = `/api/get-game-history`;
-			const response = await apiClient.post(url, email);
+			const response = await apiClient.get(url);
 			return response.data as IGameHistory;
 		} catch (error) {
-			console.error(`Error submitting VA Scale Game:`, error);
+			console.error(`Error submitting Game History:`, error);
 			return undefined;
 		}
 	},

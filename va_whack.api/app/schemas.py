@@ -54,8 +54,9 @@ class TokenRequest(BaseModel):
 # Schema for the API response containing a JWT access token.
 # ==============================================================================
 class Token(BaseModel):
-    access_token: str
-    token_type: str
+    access_token: str    
+    name: str
+    ageGroup: str
 
 # ==============================================================================
 # Schemas for Game Data Submission
@@ -88,6 +89,7 @@ class ScaleLogEntry(BaseModel):
 
 class VAScaleGameSessionCreate(BaseModel):
     
+    masterSessionId: Optional[str] 
     startTime: int
     endTime: Optional[int] = None
     config: VAScaleGameConfig
@@ -130,23 +132,24 @@ class EngagementGameConfig(BaseModel):
 
 class EngagementGameSessionCreate(BaseModel):
     gameId: str
+    masterSessionId: Optional[str] 
     config: EngagementGameConfig
     events: List[AppearanceEvent]
     startTime: int
     endTime: Optional[int] = None
 
 class EngagementScoreSummary(BaseModel):
-    detectionSpeed: Optional[float] = None
-    detectionAccuracy: Optional[float] = None
-    spatialUniformity: Optional[float] = None
-    sensitivityThreshold: Optional[float] = None
-    falsePositiveRate: Optional[float] = None
-    missRate: Optional[float] = None
-    clickValidity: Optional[float] = None
-    trialConsistency: Optional[float] = None
-    maxHitStreak: Optional[int] = None
-    coordinationProxy: Optional[float] = None
-    targetDiscrimination: Optional[float] = None
+    detectionSpeed: Optional[float] = Field(None, alias="SS1_detectionSpeed")
+    detectionAccuracy: Optional[float] = Field(None, alias="SS2_detectionAccuracy")
+    spatialUniformity: Optional[float] = Field(None, alias="SS3_spatialUniformity")
+    sensitivityThreshold: Optional[float] = Field(None, alias="SS4_sensitivityThreshold")
+    falsePositiveRate: Optional[float] = Field(None, alias="SS5_falsePositiveRate")
+    missRate: Optional[float] = Field(None, alias="SS6_missRate")
+    clickValidity: Optional[float] = Field(None, alias="SS7_clickValidity")
+    trialConsistency: Optional[float] = Field(None, alias="SS8_trialConsistency")
+    maxHitStreak: Optional[int] = Field(None, alias="SS9_maxHitStreak")
+    coordinationProxy: Optional[float] = Field(None, alias="SS10_coordinationProxy")
+    targetDiscrimination: Optional[float] = Field(None, alias="SS11_targetDiscrimination")
     VAfinal: Optional[float] = None
     totalTrials: int
     totalMoleTrials: int
@@ -179,7 +182,7 @@ class GameSessionRead(BaseModel):
         from_attributes = True
 
 class GameHistoryResponse(BaseModel):
-    scaleGames: List[GameSessionRead]
-    engagementGames: List[GameSessionRead]
+    scaleGames: List[VAScaleGameSessionCreate]
+    engagementGames: List[EngagementGameSessionCreate]
     # Add other game types here as needed
     va_okn_fast_mode: List[GameSessionRead] = []

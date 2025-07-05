@@ -59,4 +59,4 @@ def verify_player_registration(pin_in: schemas.PinVerify, db: Session = Depends(
     access_token = security.create_access_token(
         data={"sub": str(player.id)}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "name":player.name, "ageGroup": player.age_group}
