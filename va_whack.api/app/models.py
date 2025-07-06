@@ -4,12 +4,15 @@
 # ==============================================================================
 
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Enum
-from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime, timezone
-import enum
 
+from sqlalchemy.orm import relationship
+
+from sqlalchemy.ext.declarative import declarative_base
+
+from datetime import datetime, timezone
+
+import enum
+ 
 Base = declarative_base()
 
 # ==============================================================================
@@ -17,8 +20,11 @@ Base = declarative_base()
 # Using an Enum makes the status field type-safe and more readable.
 # ==============================================================================
 class PinStatus(str, enum.Enum):
+
     ACTIVE = "active"
+
     USED = "used"
+
     EXPIRED = "expired"
 
 # ==============================================================================
@@ -26,14 +32,21 @@ class PinStatus(str, enum.Enum):
 # This SQLAlchemy model defines the 'players' table structure.
 # ==============================================================================
 class Player(Base):
+
     __tablename__ = "players"
+
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    age_group = Column(String)
-    is_verified = Column(Boolean, default=False)
-    
+
+    name = Column(String(100), index=True)
+
+    email = Column(String(320), unique=True, index=True, nullable=False)
+
+    age_group = Column(String(50))
+
+    is_verified = Column(Boolean, default=False, nullable=False)
+ 
     scale_game_sessions = relationship("VAScaleGameSession", back_populates="player")
+
     engagement_game_sessions = relationship("EngagementGameSession", back_populates="player")
 
 # ==============================================================================
@@ -41,135 +54,245 @@ class Player(Base):
 # This model defines the 'pins' table for storing verification codes.
 # ==============================================================================
 class PinNumber(Base):
+
     __tablename__ = "pins"
+
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, index=True, nullable=False)
-    pin = Column(String, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    expires_at = Column(DateTime(timezone=True))
+
+    email = Column(String(320), index=True, nullable=False)
+
+    pin = Column(String(10), nullable=False)
+
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+
     status = Column(Enum(PinStatus), default=PinStatus.ACTIVE, nullable=False)
 
 # ==============================================================================
 # Represents a single VA Scale Game session.
 # ==============================================================================
 class VAScaleGameSession(Base):
+
     __tablename__ = "va_scale_game_sessions"
+
     id = Column(Integer, primary_key=True, index=True)
-    player_id = Column(Integer, ForeignKey("players.id"))
-    master_session_id = Column(String)
-    start_time = Column(DateTime(timezone=True))
+
+    player_id = Column(Integer, ForeignKey("players.id"), nullable=False, index=True)
+
+    master_session_id = Column(String(100), index=True)
+
+    start_time = Column(DateTime(timezone=True), nullable=False)
+
     end_time = Column(DateTime(timezone=True))
-    
+ 
     player = relationship("Player", back_populates="scale_game_sessions")
+
     config = relationship("VAScaleGameConfig", back_populates="session", uselist=False, cascade="all, delete-orphan")
+
     log_entries = relationship("ScaleLogEntry", back_populates="session", cascade="all, delete-orphan")
+
     score = relationship("VAScaleGameScore", back_populates="session", uselist=False, cascade="all, delete-orphan")
-
+ 
 class VAScaleGameConfig(Base):
+
     __tablename__ = "va_scale_game_configs"
+
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("va_scale_game_sessions.id"))
-    hole_size = Column(Integer)
-    min_hole_size = Column(Integer)
-    max_hole_size = Column(Integer)
-    ratio = Column(Float)
-    inner_color = Column(String)
-    outer_color = Column(String)
-    bg_color = Column(String)
-    hole_gap = Column(Integer)
-    vertical_padding = Column(Integer)
-    horizontal_padding = Column(Integer)
-    viewing_distance_cm = Column(Integer)
+
+    session_id = Column(Integer, ForeignKey("va_scale_game_sessions.id"), nullable=False, index=True)
+
+    hole_size = Column(Integer, nullable=False)
+
+    min_hole_size = Column(Integer, nullable=False)
+
+    max_hole_size = Column(Integer, nullable=False)
+
+    ratio = Column(Float, nullable=False)
+
+    inner_color = Column(String(20), nullable=False)
+
+    outer_color = Column(String(20), nullable=False)
+
+    bg_color = Column(String(20), nullable=False)
+
+    hole_gap = Column(Integer, nullable=False)
+
+    vertical_padding = Column(Integer, nullable=False)
+
+    horizontal_padding = Column(Integer, nullable=False)
+
+    viewing_distance_cm = Column(Integer, nullable=False)
+ 
     session = relationship("VAScaleGameSession", back_populates="config")
-
+ 
 class ScaleLogEntry(Base):
-    __tablename__ = "scale_log_entries"
-    id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("va_scale_game_sessions.id"))
-    timestamp = Column(DateTime(timezone=True))
-    outer_diameter = Column(Float)
-    inner_diameter = Column(Float)
-    ratio = Column(Float)
-    scale_method = Column(String)
-    logmar = Column(Float)
-    user_response = Column(String, nullable=True)
-    session = relationship("VAScaleGameSession", back_populates="log_entries")
 
-class VAScaleGameScore(Base):
-    __tablename__ = "va_scale_game_scores"
+    __tablename__ = "scale_log_entries"
+
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("va_scale_game_sessions.id"))
-    best_va = Column(Float)
-    n = Column(Integer)
-    b = Column(Integer)
-    final_va = Column(Float)
+
+    session_id = Column(Integer, ForeignKey("va_scale_game_sessions.id"), nullable=False, index=True)
+
+    timestamp = Column(DateTime(timezone=True), nullable=False)
+
+    outer_diameter = Column(Float, nullable=False)
+
+    inner_diameter = Column(Float, nullable=False)
+
+    ratio = Column(Float, nullable=False)
+
+    scale_method = Column(String(50), nullable=False)
+
+    logmar = Column(Float, nullable=False)
+
+    user_response = Column(String(100))
+ 
+    session = relationship("VAScaleGameSession", back_populates="log_entries")
+ 
+class VAScaleGameScore(Base):
+
+    __tablename__ = "va_scale_game_scores"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    session_id = Column(Integer, ForeignKey("va_scale_game_sessions.id"), nullable=False, index=True)
+
+    best_va = Column(Float, nullable=True)
+
+    n = Column(Integer, nullable=True)
+
+    b = Column(Integer, nullable=True)
+
+    final_va = Column(Float, nullable=True)
+ 
     session = relationship("VAScaleGameSession", back_populates="score")
 
 # ==============================================================================
 # Represents a single Engagement Game session.
 # ==============================================================================
 class EngagementGameSession(Base):
+
     __tablename__ = "engagement_game_sessions"
+
     id = Column(Integer, primary_key=True, index=True)
-    player_id = Column(Integer, ForeignKey("players.id"))
-    game_id = Column(String)
-    master_session_id = Column(String)
-    start_time = Column(DateTime(timezone=True))
+
+    player_id = Column(Integer, ForeignKey("players.id"), nullable=False, index=True)
+
+    game_id = Column(String(100), nullable=False, index=True)
+
+    master_session_id = Column(String(100), index=True)
+
+    start_time = Column(DateTime(timezone=True), nullable=False)
+
     end_time = Column(DateTime(timezone=True))
+ 
     player = relationship("Player", back_populates="engagement_game_sessions")
+
     config = relationship("EngagementGameConfig", back_populates="session", uselist=False, cascade="all, delete-orphan")
+
     events = relationship("AppearanceEvent", back_populates="session", cascade="all, delete-orphan")
+
     score = relationship("EngagementScoreSummary", back_populates="session", uselist=False, cascade="all, delete-orphan")
-
+ 
 class EngagementGameConfig(Base):
+
     __tablename__ = "engagement_game_configs"
+
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("engagement_game_sessions.id"))
-    mouse_size = Column(Integer)
-    hole_size = Column(Integer)
-    hole_gap = Column(Integer)
-    mouse_count = Column(Integer)
-    spawn_interval = Column(Integer)
-    hole_color = Column(String)
-    bg_color = Column(String)
+
+    session_id = Column(Integer, ForeignKey("engagement_game_sessions.id"), nullable=False, index=True)
+
+    mouse_size = Column(Integer, nullable=False)
+
+    hole_size = Column(Integer, nullable=False)
+
+    hole_gap = Column(Integer, nullable=False)
+
+    fake_count = Column(Integer, nullable=False)
+
+    spawn_interval = Column(Integer, nullable=False)
+
+    hole_color = Column(String(20), nullable=False)
+
+    bg_color = Column(String(20), nullable=False)
+ 
     session = relationship("EngagementGameSession", back_populates="config")
-
+ 
 class AppearanceEvent(Base):
-    __tablename__ = "appearance_events"
-    id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("engagement_game_sessions.id"))
-    event_id = Column(Integer)
-    target_type = Column(String)
-    mouse_size = Column(Integer)
-    row = Column(Integer)
-    col = Column(Integer)
-    quadrant = Column(String)
-    appear_time = Column(DateTime(timezone=True))
-    clicked = Column(Boolean)
-    click_time = Column(DateTime(timezone=True), nullable=True)
-    click_x = Column(Float, nullable=True)
-    click_y = Column(Float, nullable=True)
-    was_hit = Column(Boolean, nullable=True)
-    was_distractor_clicked = Column(Boolean, nullable=True)
-    session = relationship("EngagementGameSession", back_populates="events")
 
-class EngagementScoreSummary(Base):
-    __tablename__ = "engagement_score_summaries"
+    __tablename__ = "appearance_events"
+
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("engagement_game_sessions.id"))
-    detection_speed = Column(Float, nullable=True)
-    detection_accuracy = Column(Float, nullable=True)
-    spatial_uniformity = Column(Float, nullable=True)
-    sensitivity_threshold = Column(Float, nullable=True)
-    false_positive_rate = Column(Float, nullable=True)
-    miss_rate = Column(Float, nullable=True)
-    click_validity = Column(Float, nullable=True)
-    trial_consistency = Column(Float, nullable=True)
-    max_hit_streak = Column(Integer, nullable=True)
-    coordination_proxy = Column(Float, nullable=True)
-    target_discrimination = Column(Float, nullable=True)
-    va_final = Column(Float, nullable=True)
-    total_trials = Column(Integer)
-    total_mole_trials = Column(Integer)
-    total_rabbit_trials = Column(Integer)
+
+    session_id = Column(Integer, ForeignKey("engagement_game_sessions.id"), nullable=False, index=True)
+
+    event_id = Column(Integer, nullable=False)
+
+    target_type = Column(String(50), nullable=False)
+
+    mouse_size = Column(Integer, nullable=False)
+
+    row = Column(Integer, nullable=False)
+
+    col = Column(Integer, nullable=False)
+
+    quadrant = Column(String(10), nullable=False)
+
+    appear_time = Column(DateTime(timezone=True), nullable=False)
+
+    clicked = Column(Boolean, nullable=False)
+
+    click_time = Column(DateTime(timezone=True))
+
+    click_x = Column(Float)
+
+    click_y = Column(Float)
+
+    was_hit = Column(Boolean)
+
+    was_distractor_clicked = Column(Boolean)
+ 
+    session = relationship("EngagementGameSession", back_populates="events")
+ 
+class EngagementScoreSummary(Base):
+
+    __tablename__ = "engagement_score_summaries"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    session_id = Column(Integer, ForeignKey("engagement_game_sessions.id"), nullable=False, index=True)
+
+    detection_speed = Column(Float)
+
+    detection_accuracy = Column(Float)
+
+    spatial_uniformity = Column(Float)
+
+    sensitivity_threshold = Column(Float)
+
+    false_positive_rate = Column(Float)
+
+    miss_rate = Column(Float)
+
+    click_validity = Column(Float)
+
+    trial_consistency = Column(Float)
+
+    max_hit_streak = Column(Integer)
+
+    coordination_proxy = Column(Float)
+
+    target_discrimination = Column(Float)
+
+    va_final = Column(Float)
+
+    total_trials = Column(Integer, nullable=False)
+
+    total_mole_trials = Column(Integer, nullable=False)
+
+    total_rabbit_trials = Column(Integer, nullable=False)
+ 
     session = relationship("EngagementGameSession", back_populates="score")
+
+ 

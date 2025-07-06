@@ -1,7 +1,7 @@
 /** @format */
 
 import { useState, useMemo, useEffect } from 'react';
-import { useVAScaleGameSessionStore, useEnagementGameSessionStore, GameService, type IUserDetails, type IScaleGameSession, type IEnagementGameSession, labels } from '../../shared';
+import { GameService, type IUserDetails, type IScaleGameSession, type IEnagementGameSession, labels } from '../../shared';
 
 import { Timer, BarChart3, Home, ChevronDown, ChevronUp, Globe } from 'lucide-react';
 
@@ -17,17 +17,8 @@ export const Profile = ({ user, onExit }: IProps) => {
 	const toggleLang = useUIStore((s) => s.toggleLang);
 	const t = labels[lang];
 
-	const currentScaleSession = useVAScaleGameSessionStore((s) => s.currentSession);
-	const scaleHistory = useVAScaleGameSessionStore((s) => s.sessionHistory);
-
-	const currentEngagementSession = useEnagementGameSessionStore((s) => s.currentSession);
-	const engagementHistory = useEnagementGameSessionStore((s) => s.sessionHistory);
-
 	const [scaleSessionsFromDb, setScaleSessionsFromDb] = useState<IScaleGameSession[]>([]);
 	const [engagementSessionsFromDb, setEngagementSessionsFromDb] = useState<IEnagementGameSession[]>([]);
-
-	const allScaleSessions: IScaleGameSession[] = [...(currentScaleSession ? [currentScaleSession] : []), ...scaleHistory, ...scaleSessionsFromDb];
-	const allEngagementSessions: IEnagementGameSession[] = [...(currentEngagementSession ? [currentEngagementSession] : []), ...engagementHistory, ...engagementSessionsFromDb];
 
 	useEffect(() => {
 		const fetchGameHistory = async () => {
@@ -35,22 +26,27 @@ export const Profile = ({ user, onExit }: IProps) => {
 				const history = await GameService.getPlayerGameHistory();
 				if (history) {
 					setScaleSessionsFromDb(history.scaleGames || []);
-					setEngagementSessionsFromDb(history.enagementGames || []);
+					setEngagementSessionsFromDb(history.engagementGames || [])
 				}
 			} catch (error) {
 				console.error('Error fetching game history:', error);
 			}
 		};
 		fetchGameHistory();
-	 }, []);
+	}, []);
 
 	const groupedByMasterSession = useMemo(() => {
+		const allScaleSessions: IScaleGameSession[] = [...scaleSessionsFromDb];
+		const allEngagementSessions: IEnagementGameSession[] = [...engagementSessionsFromDb];
 		const allSessions = [...allScaleSessions, ...allEngagementSessions];
+
 		const grouped: Record<string, { scale?: IScaleGameSession; engagement: IEnagementGameSession[] }> = {};
+
 		for (const session of allSessions) {
 			const masterId = 'masterSessionId' in session ? session.masterSessionId : '';
 			if (!masterId) continue;
 			if (!grouped[masterId]) grouped[masterId] = { engagement: [] };
+
 			if ('logEntries' in session) {
 				grouped[masterId].scale = session;
 			} else {
@@ -58,37 +54,46 @@ export const Profile = ({ user, onExit }: IProps) => {
 			}
 		}
 		return grouped;
-	}, [allScaleSessions, allEngagementSessions]);
+	}, [scaleSessionsFromDb, engagementSessionsFromDb]);
 
-	const [expandedSessions, setExpandedSessions] = useState<Record<string, boolean>>(() => {
+	const [expandedSessions, setExpandedSessions] = useState<Record<string, boolean>>({});
+
+	useEffect(() => {
 		const initialState: Record<string, boolean> = {};
 		for (const masterId in groupedByMasterSession) {
-			initialState[masterId] = true; // default expanded
+			initialState[masterId] = true;
 		}
-		return initialState;
-	});
+		setExpandedSessions(initialState);
+	}, [groupedByMasterSession]);
 
-	const handleDownloadAIAnalysis = (masterId: string) => {
-		const group = groupedByMasterSession[masterId];
-		console.log('Download AI Report:', masterId, group);
-		alert('Under Developing');
+	const handleDownloadAIAnalysis = async (masterId: string) => {
+		try {
+			console.log('Downloading AI Report:', masterId, groupedByMasterSession[masterId]);
+			await GameService.getAIReport(masterId);
+		} catch (error) {
+			console.error('Download failed:', error);
+			alert('Failed to download AI report. Please try again.');
+		}
 	};
 
 	const handleDownloadGameData = (masterId: string) => {
-		const group = groupedByMasterSession[masterId];
-		console.log('Download Game Data:', masterId, group);
+		console.log('Download Game Data:', masterId, groupedByMasterSession[masterId]);
 		alert('Under Developing');
 	};
 
-	const handleEmailReport = (masterId: string) => {
-		const group = groupedByMasterSession[masterId];
-		console.log('Email report for:', masterId, group);
-		alert('Under Developing');
+	const handleEmailReport = async (masterId: string) => {
+		try {
+			console.log('Email report for:', masterId, groupedByMasterSession[masterId]);
+			await GameService.sendAIReportEmail(masterId);
+			alert('AI report has been emailed successfully.');
+		} catch (error) {
+			console.error('Error sending AI report email:', error);
+			alert('Failed to send AI report email. Please try again later.');
+		}
 	};
-
 	return (
 		<div className='relative min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 p-6'>
-			{/* Top-left: Language + Back stacked */}
+			{/* Top-left: Language toggle */}
 			<div className='absolute top-4 left-4 flex flex-col gap-2 z-10'>
 				<button onClick={toggleLang} className='p-2 bg-white rounded shadow hover:bg-gray-100 flex items-center gap-2'>
 					<Globe className='w-4 h-4' />
@@ -96,7 +101,7 @@ export const Profile = ({ user, onExit }: IProps) => {
 				</button>
 			</div>
 
-			{/* Top-right: Exit/Home button stays as-is */}
+			{/* Top-right: Exit button */}
 			<button onClick={onExit} className='absolute top-4 right-4 p-2 bg-white rounded-full shadow hover:bg-gray-100'>
 				<Home className='w-6 h-6 text-gray-700' />
 			</button>
@@ -111,10 +116,11 @@ export const Profile = ({ user, onExit }: IProps) => {
 			) : (
 				Object.entries(groupedByMasterSession).map(([masterId, group], idx) => {
 					const isExpanded = expandedSessions[masterId] ?? true;
+
 					return (
 						<div key={masterId} className='bg-white shadow-lg rounded-lg p-6 mb-10'>
 							<div className='mb-4'>
-								{/* Title + Expand/Collapse */}
+								{/* Header */}
 								<div className='flex items-center justify-between'>
 									<h2 className='text-xl font-bold text-indigo-700'>
 										{t.profileSession} #{idx + 1}
@@ -132,18 +138,16 @@ export const Profile = ({ user, onExit }: IProps) => {
 									</button>
 								</div>
 
-								{/* Download buttons */}
+								{/* Action buttons */}
 								{isExpanded && (
 									<div className='mt-2 flex flex-col sm:flex-row sm:justify-end sm:items-center gap-2'>
-										<button className='bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm sm:text-base sm:w-auto w-full' onClick={() => handleDownloadAIAnalysis(masterId)}>
+										<button className='bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded' onClick={() => handleDownloadAIAnalysis(masterId)}>
 											{t.profileDownloadAI}
 										</button>
-
-										<button className='bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm sm:text-base sm:w-auto w-full' onClick={() => handleDownloadGameData(masterId)}>
+										<button className='bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded' onClick={() => handleDownloadGameData(masterId)}>
 											{t.profileDownloadGame}
 										</button>
-
-										<button className='bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm sm:text-base sm:w-auto w-full' onClick={() => handleEmailReport(masterId)}>
+										<button className='bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded' onClick={() => handleEmailReport(masterId)}>
 											{t.profileEmail}
 										</button>
 									</div>
@@ -152,6 +156,7 @@ export const Profile = ({ user, onExit }: IProps) => {
 
 							{isExpanded && (
 								<>
+									{/* VA Scale Game */}
 									{group.scale && (
 										<div className='mb-8'>
 											<h3 className='text-lg font-semibold text-orange-600 flex items-center gap-2'>
@@ -163,12 +168,12 @@ export const Profile = ({ user, onExit }: IProps) => {
 												{t.profileEnd}: {group.scale.endTime ? new Date(group.scale.endTime).toLocaleString() : t.profileInProgress}
 											</p>
 											<p className='mt-2 text-sm text-gray-700'>
-												<b>{t.profileConfig}:</b> HoleSize = {group.scale.config.holeSize} mm, Ratio = {group.scale.config.ratio}, Gap = {group.scale.config.holeGap}
-												px, Distance = {group.scale.config.viewingDistanceCm} cm
+												<b>{t.profileConfig}:</b> HoleSize = {group.scale.config.holeSize} mm, Ratio = {group.scale.config.ratio}, Gap = {group.scale.config.holeGap}px, Distance = {group.scale.config.viewingDistanceCm} cm
 											</p>
 											<p className='mt-2 text-sm text-gray-700'>
 												<b>{t.profileScore}:</b> bestVA = {group.scale.score.bestVA}, finalVA = {group.scale.score.finalVA}, b = {group.scale.score.b}, n = {group.scale.score.n}
 											</p>
+
 											<div className='overflow-x-auto mt-4'>
 												<table className='min-w-[600px] text-sm border'>
 													<thead>
@@ -196,10 +201,11 @@ export const Profile = ({ user, onExit }: IProps) => {
 														))}
 													</tbody>
 												</table>
-											</div>{' '}
+											</div>
 										</div>
 									)}
 
+									{/* Engagement Game */}
 									{group.engagement.length > 0 && (
 										<div>
 											<h3 className='text-lg font-semibold text-green-600 flex items-center gap-2'>
@@ -216,7 +222,6 @@ export const Profile = ({ user, onExit }: IProps) => {
 													<p className='text-sm text-gray-700 mt-1'>
 														<b>Config:</b> HoleSize = {s.config.holeSize}px, Gap = {s.config.holeGap}px, FakeCount = {s.config.fakeCount}, Interval = {s.config.spawnInterval}ms
 													</p>
-
 													<p className='text-sm text-gray-700 mt-1'>
 														<b>Scores:</b>
 														<br />
@@ -228,7 +233,6 @@ export const Profile = ({ user, onExit }: IProps) => {
 														<br />
 														SS11 = {s.scores.SS11_targetDiscrimination ?? '-'}, VAfinal = {s.scores.VAfinal ?? '-'}
 													</p>
-
 													<div className='mt-3 max-h-[300px] overflow-y-auto border rounded'>
 														<table className='w-full text-sm'>
 															<thead className='sticky top-0 bg-gray-100'>
@@ -270,3 +274,4 @@ export const Profile = ({ user, onExit }: IProps) => {
 		</div>
 	);
 };
+

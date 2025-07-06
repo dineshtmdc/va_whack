@@ -4,13 +4,11 @@
 # ==============================================================================
 from .analysis_strategies.base_strategy import AnalysisStrategy
 from .analysis_strategies.engagement_mode_strategy import EngagementModeStrategy
-from .analysis_strategies.okn_fast_mode_strategy import OknFastModeStrategy
 from .analysis_strategies.scale_mode_strategy import ScaleModeStrategy
 
 # A dictionary mapping game type strings to their corresponding strategy class
 STRATEGY_MAP = {
     "engagement_mode": EngagementModeStrategy,
-    "va_okn_fast_mode": OknFastModeStrategy,
     "va_scale_mode": ScaleModeStrategy,
 }
 
