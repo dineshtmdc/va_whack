@@ -53,4 +53,49 @@ export const GameService = {
 			return undefined;
 		}
 	},
+
+	/**
+	* Downloads AI report as a text file.
+	*/
+	async getAIReport(masterSessionId: string): Promise<void> {
+		try {
+			const response = await apiClient.get(`/api/get_ai_report`, {
+				params: { master_session_id: masterSessionId },
+				responseType: 'blob', // very important!
+			});
+
+			const blob = new Blob([response.data], { type: 'text/plain' });
+			const url = window.URL.createObjectURL(blob);
+			const link = document.createElement('a');
+
+			// Optional: extract filename from Content-Disposition header
+			const contentDisposition = response.headers['content-disposition'];
+			const filenameMatch = contentDisposition?.match(/filename="?(.+?)"?$/);
+			const filename = filenameMatch ? filenameMatch[1] : 'vision_report.txt';
+
+			link.href = url;
+			link.download = filename;
+			document.body.appendChild(link);
+			link.click();
+			link.remove();
+			URL.revokeObjectURL(url);
+		} catch (error) {
+			console.error('Error downloading AI report:', error);
+		}
+	},
+	/**
+	* Sends AI report via email.
+	*/
+	async sendAIReportEmail(masterSessionId: string): Promise<void> {
+		try {
+			const response = await apiClient.get('/api/send_email_report', {
+				params: { master_session_id: masterSessionId },
+			});
+			console.log(response.data?.message || 'Email sent successfully');
+		} catch (error) {
+			console.error('Failed to send AI report email:', error);
+			throw error;
+		}
+	},
+
 };

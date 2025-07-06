@@ -30,7 +30,7 @@ export interface IEnagementGameConfig {
 
 export interface IEnagementGameSession {
 	gameId: string;
-	user: IUserDetails;
+	email: String;
 	config: IEnagementGameConfig;
 	events: IAppearanceEvent[];
 	startTime: number; // optional: for session tracking

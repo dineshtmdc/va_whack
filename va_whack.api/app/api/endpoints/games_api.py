@@ -4,8 +4,7 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from io import BytesIO
-from sqlalchemy.orm import Session
-from app.utils.mapper import map_game_history
+from sqlalchemy.orm import Session, joinedload
 
 from ... import schemas, models
 from ...repository import scale_game as scale_game_repo, engagement_game as engagement_game_repo
@@ -90,55 +89,80 @@ def __generate_ai_report(
 @router.post("/va-scale-game/submit", response_model=schemas.ScaleGameScore)
 def submit_va_scale_game(
     session_data: schemas.VAScaleGameSessionCreate,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_player: models.Player = Depends(get_current_player),
 ):
-    new_session = scale_game_repo.create_full_session(
-        db, player_id=current_player.id, session_data=session_data
-    )
-
+    
     strategy = analysis_service.get_analysis_strategy("va_scale_mode")
+
     analysis_results = strategy.analyze(session_data)
 
-    scale_game_repo.save_score(db, session_id=new_session.id, score_data=analysis_results)
+    session_data.score = analysis_results # algorithm claculate results set for saving
 
-    # Optionally trigger report email later
-    # background_tasks.add_task(generate_and_email_ai_report, master_session_id=session_data.master_session_id, db=db, current_player=current_player)
+    scale_game_repo.save_data_into_db( db, player_id=current_player.id, session_data=session_data )
 
-    return schemas.ScaleGameScore(**analysis_results)
+    return analysis_results
 
 
 # Submit Engagement game session
 @router.post("/engagement-game/submit", response_model=schemas.EngagementScoreSummary)
 def submit_engagement_game(
     session_data: schemas.EngagementGameSessionCreate,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_player: models.Player = Depends(get_current_player),
 ):
     strategy = analysis_service.get_analysis_strategy("engagement_mode")
+
     analysis_results = strategy.analyze(session_data)
 
-    new_session = engagement_game_repo.create_full_session(
-        db, player_id=current_player.id, session_data=session_data
-    )
-
-    engagement_game_repo.save_score(db, session_id=new_session.id, score_data=analysis_results)
-
-    # Optionally add background task to send email
-    # background_tasks.add_task(generate_and_email_ai_report, master_session_id=session_data.master_session_id, db=db, current_player=current_player)
-
+    session_data.scores = analysis_results # algorithm claculate results set for saving 
+    
+    engagement_game_repo.save_data_into_db(db, player_id=current_player.id, session_data=session_data) 
+                                             
     return analysis_results
 
 
 # Retrieve full game session history for current player
-@router.get("/get-game-history")
+@router.get("/get-game-history", response_model=schemas.GameHistoryResponse)
 def get_session_history(
     db: Session = Depends(get_db),
     current_player: models.Player = Depends(get_current_player),
-):
-    scale_games = db.query(models.VAScaleGameSession).filter_by(player_id=current_player.id).all()
-    engagement_games = db.query(models.EngagementGameSession).filter_by(player_id=current_player.id).all()
 
-    return map_game_history(scale_games, engagement_games)
+):
+
+    # Load VA Scale Game Sessions with config, score, and log entries
+
+    scale_games = db.query(models.VAScaleGameSession).filter_by(player_id=current_player.id).options(
+
+        joinedload(models.VAScaleGameSession.config),
+
+        joinedload(models.VAScaleGameSession.score),
+
+        joinedload(models.VAScaleGameSession.log_entries),
+
+    ).all()
+ 
+    # Load Engagement Game Sessions with config, score, and events
+
+    engagement_games = db.query(models.EngagementGameSession).filter_by(player_id=current_player.id).options(
+
+        joinedload(models.EngagementGameSession.config),
+
+        joinedload(models.EngagementGameSession.score),
+
+        joinedload(models.EngagementGameSession.events),
+
+    ).all()
+ 
+    # Transform into response model
+
+    return schemas.GameHistoryResponse.from_orm_models(
+
+        scale_games=scale_games,
+
+        engagement_games=engagement_games,
+
+        email=current_player.email
+
+    )
+ 
