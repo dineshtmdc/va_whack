@@ -55,23 +55,23 @@ export const GameService = {
 	},
 
 	/**
-	* Downloads AI report as a text file.
-	*/
-	async getAIReport(masterSessionId: string): Promise<void> {
+	 * Downloads AI report as a text file.
+	 */
+	async downloadReport(masterSessionId: string): Promise<void> {
 		try {
-			const response = await apiClient.get(`/api/get_ai_report`, {
+			const response = await apiClient.get(`/api/download_report`, {
 				params: { master_session_id: masterSessionId },
-				responseType: 'blob', // very important!
+				responseType: 'blob', // still correct for PDF
 			});
 
-			const blob = new Blob([response.data], { type: 'text/plain' });
+			const blob = new Blob([response.data], { type: 'application/pdf' }); // changed to PDF
 			const url = window.URL.createObjectURL(blob);
 			const link = document.createElement('a');
 
-			// Optional: extract filename from Content-Disposition header
+			// Extract filename from Content-Disposition header if available
 			const contentDisposition = response.headers['content-disposition'];
 			const filenameMatch = contentDisposition?.match(/filename="?(.+?)"?$/);
-			const filename = filenameMatch ? filenameMatch[1] : 'vision_report.txt';
+			const filename = filenameMatch ? filenameMatch[1] : 'vision_report.pdf'; // updated default
 
 			link.href = url;
 			link.download = filename;
@@ -83,12 +83,13 @@ export const GameService = {
 			console.error('Error downloading AI report:', error);
 		}
 	},
+
 	/**
-	* Sends AI report via email.
-	*/
+	 * Sends AI report via email.
+	 */
 	async sendAIReportEmail(masterSessionId: string): Promise<void> {
 		try {
-			const response = await apiClient.get('/api/send_email_report', {
+			const response = await apiClient.get('/api/email_report', {
 				params: { master_session_id: masterSessionId },
 			});
 			console.log(response.data?.message || 'Email sent successfully');
@@ -97,5 +98,4 @@ export const GameService = {
 			throw error;
 		}
 	},
-
 };

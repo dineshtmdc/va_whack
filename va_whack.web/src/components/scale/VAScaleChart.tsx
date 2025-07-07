@@ -15,10 +15,11 @@ interface VAScaleChartProps {
 	logEntries: IScaleLogEntry[];
 	bestVA?: number;
 	finalVA?: number;
-	onClose: () => void;
+	onClose?: () => void;
+	disableDraggable?: boolean;
 }
 
-export const VAScaleChart = ({ logEntries, bestVA, finalVA, onClose }: VAScaleChartProps) => {
+export const VAScaleChart = ({ logEntries, bestVA, finalVA, disableDraggable, onClose }: VAScaleChartProps) => {
 	const chartRef = useRef<HTMLDivElement>(null);
 	const showChart = logEntries && logEntries.length > 0;
 
@@ -113,7 +114,7 @@ export const VAScaleChart = ({ logEntries, bestVA, finalVA, onClose }: VAScaleCh
 				strokeOpacity: 1,
 			});
 			range.get('label')?.setAll({
-				text: 'Best VA',
+				text: '                      				                		Best VA',
 				fill: am5.color(0x22c55e),
 				centerY: am5.p50,
 				x: 10,
@@ -174,12 +175,14 @@ export const VAScaleChart = ({ logEntries, bestVA, finalVA, onClose }: VAScaleCh
 
 	const chartPanel = (
 		<div className='flex flex-col w-full h-full bg-white'>
-			<div className='flex items-center justify-between px-4 py-3 border-b bg-gray-50'>
-				<h3 className='text-lg font-semibold'>Scale Fast Chart</h3>
-				<button className='text-gray-600 hover:text-black' onClick={onClose} title='Close'>
-					<X className='w-5 h-5' />
-				</button>
-			</div>
+			{!disableDraggable && (
+				<div className='flex items-center justify-between px-4 py-3 border-b bg-gray-50'>
+					<h3 className='text-lg font-semibold'>Scale Fast Chart</h3>
+					<button className='text-gray-600 hover:text-black' onClick={onClose} title='Close'>
+						<X className='w-5 h-5' />
+					</button>
+				</div>
+			)}
 			<div className='p-1 flex-1 overflow-auto'>
 				{showChart ? (
 					<div className='rounded border border-gray-300 h-full'>
@@ -193,6 +196,9 @@ export const VAScaleChart = ({ logEntries, bestVA, finalVA, onClose }: VAScaleCh
 		</div>
 	);
 
+	if (disableDraggable) {
+		return <div className='w-full h-full max-w-[600px] min-h-[400px] border rounded shadow bg-white overflow-hidden'>{chartPanel}</div>;
+	}
 	return (
 		<Rnd default={{ x: 60, y: 55, width: 600, height: 600 }} minWidth={400} minHeight={300} bounds='window' className='z-[9999] bg-white rounded shadow-xl border overflow-hidden flex flex-col'>
 			{chartPanel}

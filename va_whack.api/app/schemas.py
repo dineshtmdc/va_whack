@@ -148,7 +148,7 @@ class EngagementScoreSummary(BaseCamelModel):
     max_hit_streak: Optional[int] = Field(None, alias="SS9_maxHitStreak")
     coordination_proxy: Optional[float] = Field(None, alias="SS10_coordinationProxy")
     target_discrimination: Optional[float] = Field(None, alias="SS11_targetDiscrimination")
-    VAfinal: Optional[float] = None
+    VAfinal: Optional[float] = Field(None, alias="VAfinal")
     total_trials: int
     total_mole_trials: int
     total_fake_trials: int

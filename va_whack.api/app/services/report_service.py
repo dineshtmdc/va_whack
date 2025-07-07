@@ -25,14 +25,14 @@ def generate_ai_summary(player: Player, va_scale_game: VAScaleGameSession, engag
         difficulty_levels = ["Very Easy", "Easy", "Medium", "Hard", "Very Hard"]
         engagement_summary_blocks = []
 
-        for i, session in enumerate(engagement_games[:5]):  # Only first 5
+        for i, session in enumerate(engagement_games[:5]):
             score = session.score
             level = difficulty_levels[i] if i < len(difficulty_levels) else f"Level {i+1}"
             if not score:
                 continue
 
             engagement_summary_blocks.append(f"""
-🔹 **{level}**
+🔹 {level}
 - SS₁ Detection Speed: {score.detection_speed}
 - SS₂ Detection Accuracy: {score.detection_accuracy}
 - SS₃ Spatial Uniformity: {score.spatial_uniformity}
@@ -47,19 +47,105 @@ def generate_ai_summary(player: Player, va_scale_game: VAScaleGameSession, engag
 - VA Final: {score.va_final}
 """)
 
-        # Combine all level-wise blocks into one string
         engagement_summary_text = "\n".join(engagement_summary_blocks)
 
-        # Build prompt
+        # Build GPT prompt
         prompt = f"""
-You are a friendly and intelligent vision test assistant. Summarize this player's visual performance across the Visual Acuity Scale game and five Engagement Game levels (Very Easy to Very Hard). The player is tested on clarity, focus, coordination, and cognitive accuracy.
+You are a clinically-aware AI assistant tasked with generating a friendly, structured summary report of a player's vision testing performance.
 
-Your job is to:
-- Provide a friendly but insightful report
-- Highlight trends across difficulty levels (e.g., declining performance, stable accuracy, or fatigue)
-- Offer medically-aware explanations if performance drops sharply
-- Recommend vision checkups or exercises only if warranted
-- Keep the tone warm and motivating
+The player has completed:
+- A Visual Acuity Scale Game, which outputs a final logMAR value (lower = better).
+- Five Engagement Game levels, each giving scores across 11 metrics (SS₁ to SS₁₁), related to speed, accuracy, coordination, and visual focus.
+
+---
+
+###  Your Objective
+
+Write a clear and encouraging summary report that includes:
+
+---
+
+###  1. Overall Impression
+Begin with a short, high-level summary of the player's effort and performance across both games.
+
+---
+
+###  2. Visual Acuity Analysis (logMAR)
+Interpret the VA Final logMAR score using this scale:
+
+| logMAR       | Vision Quality       |
+|--------------|----------------------|
+| ≤ 0.0        | Excellent             |
+| 0.1 – 0.2    | Good                  |
+| 0.3 – 0.4    | Average               |
+| 0.5 – 0.9    | Below Average         |
+| ≥ 1.0        | Poor                  |
+
+Explain what the player’s final logMAR ({final_va}) means in everyday terms. Mention:
+- Best VA score ({best_va})
+- Number of steps taken ({scale_steps})
+- Any signs of fluctuation or stability
+
+---
+
+### 🎮 3. Engagement Game Breakdown (5 Levels)
+For each level (Very Easy → Very Hard), analyze:
+- How detection speed, accuracy, and consistency changed with difficulty
+- Whether fatigue, distraction, or sharp drops are visible
+- Any strengths (e.g., “excellent discrimination” or “low false positive rate”)
+
+Use trend words: “stable”, “declining”, “peaked at medium”, etc.
+
+---
+
+###  4. Score Interpretations (SS1–SS11)
+
+For each score, include:
+- The name and purpose of the score
+- The actual value from the game
+- A grade based on thresholds
+- A short interpretation (human-readable)
+
+Use this grading scale:
+
+| Grade        | Description                         |
+|--------------|-------------------------------------|
+| Excellent    | Top 20% performance or ideal range  |
+| Good         | Above average                       |
+| Average      | Within expected range               |
+| Below Avg    | Needs improvement                   |
+| Poor         | Significantly low or problematic    |
+
+#### Explain each metric:
+
+- SS1 Detection Speed: How fast targets are reacted to. Fast is better.
+- SS2 Detection Accuracy: % of correct hits vs total real targets.
+- SS3 Spatial Uniformity: Consistency of performance across screen space.
+- SS4 Sensitivity Threshold: Ability to detect small/weak stimuli.
+- SS5 False Positive Rate: % of clicks on fake (non-target) items. Lower is better.
+- SS6 Miss Rate: % of real targets missed. Lower is better.
+- SS7 Click Validity: Proportion of valid clicks (on actual targets).
+- SS8 Trial Consistency: Steadiness in behavior across multiple rounds.
+- SS9 Max Hit Streak: Longest run of correct hits without a miss.
+- SS10 Coordination Proxy: Proxy for motor response control.
+- SS11 Target Discrimination: Accuracy in distinguishing real from fake stimuli.
+
+Provide one line for each score that looks like:
+
+SS4 – Sensitivity Threshold: 0.23 → Good  
+"Indicates the player reliably detected smaller stimuli under moderate difficulty."
+
+---
+
+###  5. Summary & Recommendations
+
+Wrap up with:
+- Key strengths
+- Possible weaknesses
+- Whether clinical follow-up is suggested (only if vision is Poor or many scores are low)
+- Encouragement to continue tracking progress
+
+Tone must be friendly, supportive, and non-judgmental.
 
 ---
 
@@ -70,7 +156,6 @@ Player Info:
 
 ---
 
-
 Visual Acuity Scale Game:
 - Final logMAR: {final_va}
 - Best logMAR: {best_va}
@@ -80,10 +165,6 @@ Visual Acuity Scale Game:
 
 Engagement Game Performance by Level:
 {engagement_summary_text}
-
----
-
-Write a short, clear narrative summary in 3–5 paragraphs. Start with overall impression, then break down acuity vs engagement, and conclude with tips and encouragement.
 """
 
         response = client.chat.completions.create(
@@ -96,7 +177,7 @@ Write a short, clear narrative summary in 3–5 paragraphs. Start with overall i
                 {"role": "user", "content": prompt}
             ],
             temperature=settings.OPENAI_TEMPERATURE,
-            max_tokens=settings.OPENAI_MAX_TOKENS
+            max_tokens=10000  #settings.OPENAI_MAX_TOKENS
         )
 
         return response.choices[0].message.content.strip()
