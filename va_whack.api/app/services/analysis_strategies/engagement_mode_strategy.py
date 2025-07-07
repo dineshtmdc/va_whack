@@ -2,8 +2,6 @@ from .base_strategy import AnalysisStrategy
 from typing import Dict, Optional
 from ... import schemas
 import statistics
-import math
-
 
 class EngagementModeStrategy(AnalysisStrategy):
     def analyze(self, session_data: schemas.EngagementGameSessionCreate) -> schemas.EngagementScoreSummary:
@@ -21,12 +19,11 @@ class EngagementModeStrategy(AnalysisStrategy):
             for e in hits
             if e.click_time is not None and e.appear_time is not None
         ]
-        detection_speed = statistics.mean(reaction_times) if reaction_times else None
+        detection_speed = round(statistics.mean(reaction_times), 2) if reaction_times else None
 
-        # 2. Detection Accuracy — not computable without click distance
-      
+        # 2. Detection Accuracy (mean distance from center for hits)
         dists = [e.distance_from_center for e in hits if e.distance_from_center is not None]
-        detection_accuracy = statistics.mean(dists) if dists else None
+        detection_accuracy = round(statistics.mean(dists), 2) if dists else None
 
         # 3. Spatial Uniformity
         quadrant_times = {}
@@ -41,14 +38,14 @@ class EngagementModeStrategy(AnalysisStrategy):
 
         if len(quadrant_times) >= 2:
             delta = max(quadrant_times.values()) - min(quadrant_times.values())
-            spatial_uniformity = (1 - min(delta / 100, 1)) * 100
+            spatial_uniformity = round((1 - min(delta / 100, 1)) * 100, 2)
         else:
             spatial_uniformity = None
 
-        # 4. Sensitivity Threshold (assumes fixed logMAR = 1.0 for now)
+        # 4. Sensitivity Threshold (logMAR placeholder = 1.0)
         logmar_hits: Dict[float, list] = {}
         for e in mole_trials:
-            logmar = 1.0  # Replace with actual logmar if available per event
+            logmar = 1.0
             logmar_hits.setdefault(logmar, []).append(e.was_hit)
 
         valid_logmars = [
@@ -58,21 +55,21 @@ class EngagementModeStrategy(AnalysisStrategy):
         ]
         if valid_logmars:
             c = min(valid_logmars)
-            sensitivity_threshold = (1 - (c - 0.0) / (1.0 - 0.0)) * 100
+            sensitivity_threshold = round((1 - (c - 0.0) / (1.0 - 0.0)) * 100, 2)
         else:
             sensitivity_threshold = None
 
-        # 5. False Positive Rate (clicks on rabbits)
+        # 5. False Positive Rate
         distractor_clicks = len([e for e in rabbit_trials if e.was_distractor_clicked])
-        false_positive_rate = (distractor_clicks / len(rabbit_trials)) * 100 if rabbit_trials else None
+        false_positive_rate = round((distractor_clicks / len(rabbit_trials)) * 100, 2) if rabbit_trials else None
 
         # 6. Miss Rate
-        miss_rate = (misses / len(mole_trials)) * 100 if mole_trials else None
+        miss_rate = round((misses / len(mole_trials)) * 100, 2) if mole_trials else None
 
         # 7. Click Validity
         clicks = [e for e in events if e.clicked]
         valid_clicks = [e for e in clicks if e.was_hit]
-        click_validity = (len(valid_clicks) / len(clicks)) * 100 if clicks else None
+        click_validity = round((len(valid_clicks) / len(clicks)) * 100, 2) if clicks else None
 
         # 8. Trial Consistency
         rt_values = [
@@ -80,7 +77,7 @@ class EngagementModeStrategy(AnalysisStrategy):
             for e in events
             if e.click_time is not None and e.appear_time is not None
         ]
-        trial_consistency = statistics.pstdev(rt_values) if rt_values else 0
+        trial_consistency = round(statistics.pstdev(rt_values), 2) if rt_values else 0.0
 
         # 9. Max Hit Streak
         sorted_trials = sorted(events, key=lambda x: x.id)
@@ -92,17 +89,18 @@ class EngagementModeStrategy(AnalysisStrategy):
             else:
                 streak = 0
 
-        # 10. Coordination Proxy (disabled if accuracy is None)
+        # 10. Coordination Proxy
         coordination_proxy = (
             round(0.5 * (1 - detection_speed / 1000) * 100 + 0.5 * detection_accuracy, 2)
             if detection_speed is not None and detection_accuracy is not None else None
         )
 
         # 11. Target Discrimination
-        true_hits = len([e for e in mole_trials if e.was_hit])
+        true_hits = len(hits)
         correct_ignores = len([e for e in rabbit_trials if not e.was_distractor_clicked])
         target_discrimination = (
-            (true_hits + correct_ignores) / total_trials * 100 if total_trials > 0 else None
+            round((true_hits + correct_ignores) / total_trials * 100, 2)
+            if total_trials > 0 else None
         )
 
         # 12. VAfinal
