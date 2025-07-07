@@ -76,6 +76,14 @@ const formatTime = (sec: number) => {
 	return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
+const calculateDistanceFromCenter = (x: number, y: number): number => {
+	const centerX = window.innerWidth / 2;
+	const centerY = window.innerHeight / 2;
+	const dx = x - centerX;
+	const dy = y - centerY;
+	return Math.sqrt(dx * dx + dy * dy);
+};
+
 export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	const isMobile = useIsMobile();
 	const [gameStarted, setGameStarted] = useState(false);
@@ -122,8 +130,9 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 		const now = Date.now();
 		const occupied = new Set<string>();
 		const newMice: IMole[] = [];
+		const newEvents: IAppearanceEvent[] = [];
 
-		// 1. First: generate the main mole (real or fake, based on 20% chance)
+		// 1. Main mole (real or fake)
 		let row = 0,
 			col = 0,
 			key = '';
@@ -135,15 +144,29 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 		occupied.add(key);
 
 		const isMainFake = Math.random() < 0.2;
+		const mainId = nextEventIdRef.current;
 
 		newMice.push({
-			id: nextEventIdRef.current,
+			id: mainId,
 			row,
 			col,
 			mole_type: isMainFake ? 'fake-mole' : 'mole',
+			appearTime: now,
 		});
 
-		// 2. Generate N fake moles (always fake)
+		newEvents.push({
+			id: mainId,
+			targetType: isMainFake ? 'fake-mole' : 'mole',
+			mouseSize: config.mouseSize,
+			row,
+			col,
+			quadrant: getQuadrant(rows, cols, row, col),
+			appearTime: now,
+			clicked: false,
+			distanceFromCenter: undefined,
+		});
+
+		// 2. Additional fake moles
 		for (let i = 1; i <= config.fakeCount; i++) {
 			let fakeRow = 0,
 				fakeCol = 0,
@@ -155,33 +178,37 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 			} while (occupied.has(fakeKey));
 			occupied.add(fakeKey);
 
+			const id = mainId + i;
+
 			newMice.push({
-				id: nextEventIdRef.current + i,
+				id,
 				row: fakeRow,
 				col: fakeCol,
 				mole_type: 'fake-mole',
+				appearTime: now,
+			});
+
+			newEvents.push({
+				id,
+				targetType: 'fake-mole',
+				mouseSize: config.mouseSize,
+				row: fakeRow,
+				col: fakeCol,
+				quadrant: getQuadrant(rows, cols, fakeRow, fakeCol),
+				appearTime: now,
+				clicked: false,
+				distanceFromCenter: undefined,
 			});
 		}
 
-		// Finalize
+		// 3. Finalize and store
 		setMice(newMice);
 		setPrevMouseIds(newMice.map((m) => m.id));
 		setUserClickedThisCycle(false);
 
-		const newEvents: IAppearanceEvent[] = newMice.map((m) => ({
-			id: m.id,
-			targetType: m.mole_type,
-			mouseSize: config.mouseSize,
-			row: m.row,
-			col: m.col,
-			quadrant: getQuadrant(rows, cols, m.row, m.col),
-			appearTime: now,
-			clicked: false,
-		}));
-
 		addEvents(newEvents);
 		nextEventIdRef.current += newMice.length;
-	}, [addEvents, cols, config.fakeCount, config.mouseSize, rows]);
+	}, [rows, cols, config.mouseSize, config.fakeCount, addEvents]);
 
 	// useEffect 1
 	useEffect(() => {
@@ -215,125 +242,195 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 
 		const interval = setInterval(() => {
 			if (!userClickedThisCycle && prevMouseIds.length > 0) {
+				//  Identify missed real moles directly from current visual mice
 				const missedRealMoles = prevMouseIds.filter((id) => {
-					const event = useEnagementGameSessionStore.getState().currentSession?.events.find((e) => e.id === id);
-					return event?.targetType === 'mole' && !event.clicked;
+					const mole = mice.find((m) => m.id === id);
+					return mole?.mole_type === 'mole';
 				});
+
 				if (missedRealMoles.length > 0) {
 					setMissCount((prev) => prev + missedRealMoles.length);
-					setComboCount(0); // Break combo if real missed
+					setComboCount(0); // Break combo
+
+					//  Add complete event for each missed real mole
+					const missedEvents = missedRealMoles
+						.map((id) => {
+							const mole = mice.find((m) => m.id === id);
+							if (!mole) return null;
+
+							return {
+								id: mole.id,
+								targetType: 'mole',
+								mouseSize: config.mouseSize,
+								row: mole.row,
+								col: mole.col,
+								quadrant: getQuadrant(rows, cols, mole.row, mole.col),
+								appearTime: mole.appearTime,
+								clicked: false,
+								clickTime: undefined,
+								clickX: undefined,
+								clickY: undefined,
+								wasHit: undefined,
+								wasDistractorClicked: undefined,
+							} satisfies IAppearanceEvent;
+						})
+						.filter(Boolean);
+
+					addEvents(missedEvents as IAppearanceEvent[]);
 				}
 			}
+
 			spawnMice();
 		}, config.spawnInterval);
 
 		return () => clearInterval(interval);
-	}, [gameStarted, rows, cols, config.spawnInterval, gameOver, userClickedThisCycle, prevMouseIds, showComboMessage, isSubmitting, showCountdown, spawnMice]);
-
+	}, [gameStarted, gameOver, rows, cols, config.spawnInterval, userClickedThisCycle, prevMouseIds, mice, showComboMessage, isSubmitting, showCountdown, spawnMice, config.mouseSize, addEvents]);
 	// useEffect 4
+	// useEffect(() => {
+	// 	const lastSession = getLastSession();
+	// 	if (!gameStarted || isSubmitting || !lastSession) return;
+
+	// 	if (timeLeft <= 0) {
+	// 		setGameOver(true);
+	// 		setGameStarted(false);
+	// 		setMice([]);
+	// 		setPrevMouseIds([]);
+	// 		endSession();
+
+	// 		setIsSubmitting(true);
+	// 		GameService.submitEnagementGame(lastSession).then((result) => {
+	// 			if (result) {
+	// 				setScore(result);
+	// 				setScoreDialogOpen(true);
+	// 				setScoreCalculated(true);
+	// 				setScoreDialogAcknowledged(false);
+	// 			}
+	// 			setIsSubmitting(false);
+
+	// 			setTimeout(() => {
+	// 				if (currentLevelIndex + 1 >= LEVEL_SEQUENCE.length) {
+	// 					setAllLevelsComplete(true);
+	// 					useGameMasterSessionStore.getState().markEngagementComplete();
+	// 				} else {
+	// 					setCurrentLevelIndex((prev) => prev + 1);
+	// 				}
+	// 			}, 1000);
+	// 		});
+	// 	}
+
+	// 	const timer = setInterval(() => {
+	// 		setTimeLeft((prev) => prev - 1);
+	// 	}, 1000);
+
+	// 	return () => clearInterval(timer);
+	// }, [timeLeft, gameStarted, isSubmitting, endSession, currentLevelIndex, LEVEL_SEQUENCE.length, getLastSession]);
+
 	useEffect(() => {
-		const lastSession = getLastSession();
-		if (!gameStarted || isSubmitting || !lastSession) return;
-
-		if (timeLeft <= 0) {
-			setGameOver(true);
-			setGameStarted(false);
-			setMice([]);
-			setPrevMouseIds([]);
-			endSession();
-
-			setIsSubmitting(true);
-			GameService.submitEnagementGame(lastSession).then((result) => {
-				if (result) {
-					setScore(result);
-					setScoreDialogOpen(true);
-					setScoreCalculated(true);
-					setScoreDialogAcknowledged(false);
-				}
-				setIsSubmitting(false);
-
-				setTimeout(() => {
-					if (currentLevelIndex + 1 >= LEVEL_SEQUENCE.length) {
-						setAllLevelsComplete(true);
-						useGameMasterSessionStore.getState().markEngagementComplete();
-					} else {
-						setCurrentLevelIndex((prev) => prev + 1);
-					}
-				}, 1000);
-			});
-		}
+		if (!gameStarted || gameOver || isSubmitting || showCountdown) return;
 
 		const timer = setInterval(() => {
 			setTimeLeft((prev) => prev - 1);
 		}, 1000);
 
 		return () => clearInterval(timer);
-	}, [timeLeft, gameStarted, isSubmitting, endSession, currentLevelIndex, LEVEL_SEQUENCE.length, getLastSession]);
+	}, [gameStarted, gameOver, isSubmitting, showCountdown]);
 
-	const spawnMiceWithSize = useCallback(
-		(customRows: number, customCols: number, fakeCount: number) => {
-			const now = Date.now();
-			const occupied = new Set<string>();
-			const newMice: IMole[] = [];
+	useEffect(() => {
+		if (timeLeft > 0 || !gameStarted || gameOver || isSubmitting) return;
 
-			let row = 0,
-				col = 0,
-				key = '';
+		setGameOver(true);
+		setGameStarted(false);
+		setMice([]);
+		setPrevMouseIds([]);
+		endSession();
+
+		const lastSession = getLastSession();
+		if (!lastSession) return;
+
+		setIsSubmitting(true);
+		GameService.submitEnagementGame(lastSession).then((result) => {
+			if (result) {
+				setScore(result);
+				setScoreDialogOpen(true);
+				setScoreCalculated(true);
+				setScoreDialogAcknowledged(false);
+			}
+			setIsSubmitting(false);
+
+			setTimeout(() => {
+				if (currentLevelIndex + 1 >= LEVEL_SEQUENCE.length) {
+					setAllLevelsComplete(true);
+					useGameMasterSessionStore.getState().markEngagementComplete();
+				} else {
+					setCurrentLevelIndex((prev) => prev + 1);
+				}
+			}, 1000);
+		});
+	}, [timeLeft, gameStarted, gameOver, isSubmitting, endSession, currentLevelIndex, LEVEL_SEQUENCE.length, getLastSession]);
+
+	const spawnMiceWithSize = useCallback((customRows: number, customCols: number, fakeCount: number) => {
+		const now = Date.now();
+		const occupied = new Set<string>();
+		const newMice: IMole[] = [];
+
+		let row = 0,
+			col = 0,
+			key = '';
+		do {
+			row = Math.floor(Math.random() * customRows);
+			col = Math.floor(Math.random() * customCols);
+			key = `${row},${col}`;
+		} while (occupied.has(key));
+		occupied.add(key);
+
+		const isMainFake = Math.random() < 0.2;
+
+		newMice.push({
+			id: nextEventIdRef.current,
+			row,
+			col,
+			mole_type: isMainFake ? 'fake-mole' : 'mole',
+			appearTime: now,
+		});
+
+		for (let i = 1; i <= fakeCount; i++) {
+			let fakeRow = 0,
+				fakeCol = 0,
+				fakeKey = '';
 			do {
-				row = Math.floor(Math.random() * customRows);
-				col = Math.floor(Math.random() * customCols);
-				key = `${row},${col}`;
-			} while (occupied.has(key));
-			occupied.add(key);
-
-			const isMainFake = Math.random() < 0.2;
+				fakeRow = Math.floor(Math.random() * customRows);
+				fakeCol = Math.floor(Math.random() * customCols);
+				fakeKey = `${fakeRow},${fakeCol}`;
+			} while (occupied.has(fakeKey));
+			occupied.add(fakeKey);
 
 			newMice.push({
-				id: nextEventIdRef.current,
-				row,
-				col,
-				mole_type: isMainFake ? 'fake-mole' : 'mole',
-			});
-
-			for (let i = 1; i <= fakeCount; i++) {
-				let fakeRow = 0,
-					fakeCol = 0,
-					fakeKey = '';
-				do {
-					fakeRow = Math.floor(Math.random() * customRows);
-					fakeCol = Math.floor(Math.random() * customCols);
-					fakeKey = `${fakeRow},${fakeCol}`;
-				} while (occupied.has(fakeKey));
-				occupied.add(fakeKey);
-
-				newMice.push({
-					id: nextEventIdRef.current + i,
-					row: fakeRow,
-					col: fakeCol,
-					mole_type: 'fake-mole',
-				});
-			}
-
-			setMice(newMice);
-			setPrevMouseIds(newMice.map((m) => m.id));
-			setUserClickedThisCycle(false);
-
-			const newEvents: IAppearanceEvent[] = newMice.map((m) => ({
-				id: m.id,
-				targetType: m.mole_type,
-				mouseSize: config.mouseSize,
-				row: m.row,
-				col: m.col,
-				quadrant: getQuadrant(customRows, customCols, m.row, m.col),
+				id: nextEventIdRef.current + i,
+				row: fakeRow,
+				col: fakeCol,
+				mole_type: 'fake-mole',
 				appearTime: now,
-				clicked: false,
-			}));
+			});
+		}
 
-			addEvents(newEvents);
-			nextEventIdRef.current += newMice.length;
-		},
-		[addEvents, config.mouseSize]
-	);
+		setMice(newMice);
+		setPrevMouseIds(newMice.map((m) => m.id));
+		setUserClickedThisCycle(false);
+
+		// const newEvents: IAppearanceEvent[] = newMice.map((m) => ({
+		// 	id: m.id,
+		// 	targetType: m.mole_type,
+		// 	mouseSize: config.mouseSize,
+		// 	row: m.row,
+		// 	col: m.col,
+		// 	quadrant: getQuadrant(customRows, customCols, m.row, m.col),
+		// 	appearTime: now,
+		// 	clicked: false,
+		// }));
+
+		// addEvents(newEvents);
+		nextEventIdRef.current += newMice.length;
+	}, []);
 
 	// function 1
 	const handleStartGame = useCallback(
@@ -501,12 +598,14 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 											setUserClickedThisCycle(true);
 											setMice((prev) => prev.filter((m) => m.id !== mouseHere.id));
 											setPrevMouseIds((prev) => prev.filter((id) => id !== mouseHere.id));
+											const now = Date.now();
 											updateEventById(mouseHere.id, {
 												clicked: true,
-												clickTime: Date.now(),
+												clickTime: now,
 												clickX: e.clientX,
 												clickY: e.clientY,
 												wasHit: true,
+												distanceFromCenter: calculateDistanceFromCenter(e.clientX, e.clientY),
 											});
 
 											// Combo logic
@@ -537,13 +636,16 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 											setComboCount(0); // Reset combo
 											setMice((prev) => prev.filter((m) => m.id !== mouseHere.id));
 											setPrevMouseIds((prev) => prev.filter((id) => id !== mouseHere.id));
+											const now = Date.now();
 											updateEventById(mouseHere.id, {
 												clicked: true,
-												clickTime: Date.now(),
+												clickTime: now,
 												clickX: e.clientX,
 												clickY: e.clientY,
 												wasDistractorClicked: true,
+												distanceFromCenter: calculateDistanceFromCenter(e.clientX, e.clientY),
 											});
+
 											spawnMice();
 											if (gameOver || showComboMessage) return;
 										}}
