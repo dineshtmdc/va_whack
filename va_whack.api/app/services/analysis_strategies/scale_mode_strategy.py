@@ -24,10 +24,10 @@ class ScaleModeStrategy(AnalysisStrategy):
                 final_va = 1.0
             )
 
-        va_best = 1.0
-        final_va = 1.0
-        b = 0
-        n = 0
+        va_best = None # logMAR value of the best line
+        final_va = None 
+        b = 0 # number of correct answers below the best line
+        n = 0 # number of mistakes on the best line
 
         # Group entries by logmar
         grouped_by_logmar = defaultdict(list)
