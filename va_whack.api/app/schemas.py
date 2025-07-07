@@ -70,7 +70,8 @@ class Token(BaseModel):
 # These are designed to match the front-end interfaces.
 # ==============================================================================
 
-# --- VA Scale Game ---class VAScaleGameConfig(BaseCamelModel):
+# --- VA Scale Game ---
+class VAScaleGameConfig(BaseCamelModel):
     hole_size: int
     min_hole_size: int
     max_hole_size: int
@@ -124,6 +125,7 @@ class AppearanceEvent(BaseCamelModel):
     click_x: Optional[float] = None
     click_y: Optional[float] = None
     was_distractor_clicked: Optional[bool] = None
+    distance_from_center: Optional[float] = None
 
 class EngagementGameConfig(BaseCamelModel):
     mouse_size: int
@@ -149,7 +151,7 @@ class EngagementScoreSummary(BaseCamelModel):
     VAfinal: Optional[float] = None
     total_trials: int
     total_mole_trials: int
-    total_rabbit_trials: int
+    total_fake_trials: int
 
 class EngagementGameSessionCreate(BaseCamelModel):
     game_id: str
@@ -245,6 +247,7 @@ class GameHistoryResponse(BaseModel):
                         click_x=event.click_x,
                         click_y=event.click_y,
                         was_distractor_clicked=event.was_distractor_clicked,
+                        distance_from_center=event.distance_from_center,
                     )
                     for event in game.events
                 ],
@@ -263,7 +266,7 @@ class GameHistoryResponse(BaseModel):
                     VAfinal=game.score.va_final,
                     total_trials=game.score.total_trials,
                     total_mole_trials=game.score.total_mole_trials,
-                    total_rabbit_trials=game.score.total_rabbit_trials,
+                    total_fake_trials=game.score.total_fake_trials,
                 )
             )
             for game in engagement_games
