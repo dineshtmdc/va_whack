@@ -250,8 +250,12 @@ class AppearanceEvent(Base):
     click_y = Column(Float)
 
     was_hit = Column(Boolean)
+    
+    row = Column(Integer, nullable=False)
 
     was_distractor_clicked = Column(Boolean)
+    
+    distance_from_center = Column(Float, nullable=True)
  
     session = relationship("EngagementGameSession", back_populates="events")
  
@@ -291,7 +295,7 @@ class EngagementScoreSummary(Base):
 
     total_mole_trials = Column(Integer, nullable=False)
 
-    total_rabbit_trials = Column(Integer, nullable=False)
+    total_fake_trials = Column(Integer, nullable=False)
  
     session = relationship("EngagementGameSession", back_populates="score")
 

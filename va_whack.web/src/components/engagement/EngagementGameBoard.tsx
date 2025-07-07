@@ -76,6 +76,14 @@ const formatTime = (sec: number) => {
 	return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
+const calculateDistanceFromCenter = (x: number, y: number): number => {
+	const centerX = window.innerWidth / 2;
+	const centerY = window.innerHeight / 2;
+	const dx = x - centerX;
+	const dy = y - centerY;
+	return Math.sqrt(dx * dx + dy * dy);
+};
+
 export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	const isMobile = useIsMobile();
 	const [gameStarted, setGameStarted] = useState(false);
@@ -122,8 +130,9 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 		const now = Date.now();
 		const occupied = new Set<string>();
 		const newMice: IMole[] = [];
+		const newEvents: IAppearanceEvent[] = [];
 
-		// 1. First: generate the main mole (real or fake, based on 20% chance)
+		// 1. Main mole (real or fake)
 		let row = 0,
 			col = 0,
 			key = '';
@@ -135,16 +144,29 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 		occupied.add(key);
 
 		const isMainFake = Math.random() < 0.2;
+		const mainId = nextEventIdRef.current;
 
 		newMice.push({
-			id: nextEventIdRef.current,
+			id: mainId,
 			row,
 			col,
 			mole_type: isMainFake ? 'fake-mole' : 'mole',
 			appearTime: now,
 		});
 
-		// 2. Generate N fake moles (always fake)
+		newEvents.push({
+			id: mainId,
+			targetType: isMainFake ? 'fake-mole' : 'mole',
+			mouseSize: config.mouseSize,
+			row,
+			col,
+			quadrant: getQuadrant(rows, cols, row, col),
+			appearTime: now,
+			clicked: false,
+			distanceFromCenter: undefined,
+		});
+
+		// 2. Additional fake moles
 		for (let i = 1; i <= config.fakeCount; i++) {
 			let fakeRow = 0,
 				fakeCol = 0,
@@ -156,34 +178,37 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 			} while (occupied.has(fakeKey));
 			occupied.add(fakeKey);
 
+			const id = mainId + i;
+
 			newMice.push({
-				id: nextEventIdRef.current + i,
+				id,
 				row: fakeRow,
 				col: fakeCol,
 				mole_type: 'fake-mole',
 				appearTime: now,
 			});
+
+			newEvents.push({
+				id,
+				targetType: 'fake-mole',
+				mouseSize: config.mouseSize,
+				row: fakeRow,
+				col: fakeCol,
+				quadrant: getQuadrant(rows, cols, fakeRow, fakeCol),
+				appearTime: now,
+				clicked: false,
+				distanceFromCenter: undefined,
+			});
 		}
 
-		// Finalize
+		// 3. Finalize and store
 		setMice(newMice);
 		setPrevMouseIds(newMice.map((m) => m.id));
 		setUserClickedThisCycle(false);
 
-		// const newEvents: IAppearanceEvent[] = newMice.map((m) => ({
-		// 	id: m.id,
-		// 	targetType: m.mole_type,
-		// 	mouseSize: config.mouseSize,
-		// 	row: m.row,
-		// 	col: m.col,
-		// 	quadrant: getQuadrant(rows, cols, m.row, m.col),
-		// 	appearTime: now,
-		// 	clicked: false,
-		// }));
-
-		// addEvents(newEvents);
+		addEvents(newEvents);
 		nextEventIdRef.current += newMice.length;
-	}, [cols, config.fakeCount, rows]);
+	}, [rows, cols, config.mouseSize, config.fakeCount, addEvents]);
 
 	// useEffect 1
 	useEffect(() => {
@@ -574,22 +599,14 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 											setMice((prev) => prev.filter((m) => m.id !== mouseHere.id));
 											setPrevMouseIds((prev) => prev.filter((id) => id !== mouseHere.id));
 											const now = Date.now();
-											addEvents([
-												{
-													id: mouseHere.id,
-													targetType: 'mole',
-													mouseSize: config.mouseSize,
-													row: mouseHere.row,
-													col: mouseHere.col,
-													quadrant: getQuadrant(rows, cols, mouseHere.row, mouseHere.col),
-													appearTime: now, // could track this when spawned visually
-													clicked: true,
-													clickTime: now,
-													clickX: e.clientX,
-													clickY: e.clientY,
-													wasHit: true,
-												},
-											]);
+											updateEventById(mouseHere.id, {
+												clicked: true,
+												clickTime: now,
+												clickX: e.clientX,
+												clickY: e.clientY,
+												wasHit: true,
+												distanceFromCenter: calculateDistanceFromCenter(e.clientX, e.clientY),
+											});
 
 											// Combo logic
 											setComboCount((prev) => {
@@ -619,31 +636,16 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 											setComboCount(0); // Reset combo
 											setMice((prev) => prev.filter((m) => m.id !== mouseHere.id));
 											setPrevMouseIds((prev) => prev.filter((id) => id !== mouseHere.id));
+											const now = Date.now();
 											updateEventById(mouseHere.id, {
 												clicked: true,
-												clickTime: Date.now(),
+												clickTime: now,
 												clickX: e.clientX,
 												clickY: e.clientY,
 												wasDistractorClicked: true,
+												distanceFromCenter: calculateDistanceFromCenter(e.clientX, e.clientY),
 											});
-											const now = Date.now();
 
-											addEvents([
-												{
-													id: mouseHere.id,
-													targetType: 'fake-mole',
-													mouseSize: config.mouseSize,
-													row: mouseHere.row,
-													col: mouseHere.col,
-													quadrant: getQuadrant(rows, cols, mouseHere.row, mouseHere.col),
-													appearTime: now, // again, capture this if needed earlier
-													clicked: true,
-													clickTime: now,
-													clickX: e.clientX,
-													clickY: e.clientY,
-													wasDistractorClicked: true,
-												},
-											]);
 											spawnMice();
 											if (gameOver || showComboMessage) return;
 										}}

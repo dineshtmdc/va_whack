@@ -41,7 +41,7 @@ export const useEnagementGameSessionStore = create<EnagementGameSessionState>()(
 								scores: {
 									totalTrials: 0,
 									totalMoleTrials: 0,
-									totalRabbitTrials: 0,
+									totalFakeTrials: 0,
 								},
 								masterSessionId,
 							},

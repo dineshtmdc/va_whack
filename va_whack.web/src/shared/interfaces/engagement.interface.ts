@@ -30,7 +30,7 @@ export interface IEnagementGameConfig {
 
 export interface IEnagementGameSession {
 	gameId: string;
-	email: String;
+	email: string;
 	config: IEnagementGameConfig;
 	events: IAppearanceEvent[];
 	startTime: number; // optional: for session tracking
@@ -52,10 +52,10 @@ export interface IAppearanceEvent {
 	clickTime?: number; // ms timestamp of click
 	clickX?: number; // any coordinate system you choose
 	clickY?: number;
-
 	// outcome flags (computed in front end)
 	wasHit?: boolean; // true if clicked inside the mole’s area
 	wasDistractorClicked?: boolean; // true if targetType==='rabbit' and user clicked
+	distanceFromCenter?: number;
 }
 
 export interface IVAMovingGameConfig {
@@ -91,7 +91,7 @@ export interface IEnagementScoreSummary {
 
 	totalTrials: number;
 	totalMoleTrials: number;
-	totalRabbitTrials: number;
+	totalFakeTrials: number;
 }
 
 export interface IVAGameSession {

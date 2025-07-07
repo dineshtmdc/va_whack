@@ -70,7 +70,7 @@ def save_data_into_db(db: Session, player_id: int, session_data: schemas.Engagem
         va_final=score.VAfinal,
         total_trials=score.total_trials,
         total_mole_trials=score.total_mole_trials,
-        total_rabbit_trials=score.total_rabbit_trials
+        total_fake_trials=score.total_fake_trials
     )
     db.add(db_score)
 

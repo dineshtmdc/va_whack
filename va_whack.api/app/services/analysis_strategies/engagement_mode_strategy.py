@@ -24,7 +24,9 @@ class EngagementModeStrategy(AnalysisStrategy):
         detection_speed = statistics.mean(reaction_times) if reaction_times else None
 
         # 2. Detection Accuracy — not computable without click distance
-        detection_accuracy = None
+      
+        dists = [e.distance_from_center for e in hits if e.distance_from_center is not None]
+        detection_accuracy = statistics.mean(dists) if dists else None
 
         # 3. Spatial Uniformity
         quadrant_times = {}
@@ -121,5 +123,5 @@ class EngagementModeStrategy(AnalysisStrategy):
             VAfinal=VAfinal,
             total_trials=total_trials,
             total_mole_trials=len(mole_trials),
-            total_rabbit_trials=len(rabbit_trials)
+            total_fake_trials=len(rabbit_trials)
         )
