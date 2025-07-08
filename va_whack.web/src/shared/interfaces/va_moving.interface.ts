@@ -6,7 +6,7 @@
  * @format
  */
 
-/** @format */
+
 
 export interface IVAMovingGameConfig {
 	moveSpeed?: number; // deg/s
@@ -23,10 +23,3 @@ export interface IVAMovingGameConfig {
 	bgColor: string;
 }
 
-export interface IVAGameSession {
-	gameId: string;
-	email: string;
-	config: IVAMovingGameConfig;
-	startTime: number; // optional: for session tracking
-	endTime?: number;
-}
