@@ -6,6 +6,7 @@ export * from './interfaces/engagement.interface';
 export * from './interfaces/va_scale.interface';
 export * from './interfaces/auth.interface';
 export * from './interfaces/game_history.interface';
+export * from './interfaces/va_moving.interface';
 
 // Zuztand Stores
 export * from './zustand/engagement_game_store';
