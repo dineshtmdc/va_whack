@@ -2,18 +2,19 @@
 # This is the main entry point for the FastAPI application.
 # It creates the FastAPI app instance, includes the main API router,
 # and creates the database tables.
+# va_whack.api\app\main.py
 # ==============================================================================
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .db.session import engine
-from . import models
-from .api.endpoints import players, auth, games_api
+from app.models.models import Base 
+from .api.endpoints import players_api, auth_api, games_api
 from .core.config import settings
 
 # This will create the database tables if they don't exist
 # For a production app, use Alembic for migrations instead.
-models.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Vision Testing App API",
@@ -35,8 +36,8 @@ app.add_middleware(
 
 
 # Include the endpoint routers
-app.include_router(players.router, prefix="/players", tags=["Players"])
-app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+app.include_router(players_api.router, prefix="/players", tags=["Players"])
+app.include_router(auth_api.router, prefix="/auth", tags=["Authentication"])
 app.include_router(games_api.router, prefix="/api", tags=["Games API"])
 
 

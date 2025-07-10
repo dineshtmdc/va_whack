@@ -1,5 +1,6 @@
 #==============================================================================
 # This file contains shared, reusable dependency functions for API endpoints.
+# va_whack.api\app\api\dependencies.py
 # ==============================================================================
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -7,7 +8,7 @@ from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 
 from .. import models
-from ..repository import player as player_repo
+from ..repository import player_repo
 from ..db.session import get_db
 from ..core.config import settings
 

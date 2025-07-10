@@ -1,11 +1,13 @@
 # ==============================================================================
 # This file contains data access logic for the VA Scale Game models.
+# va_whack.api\app\repository\scale_game_repo.py
 # ==============================================================================
 from sqlalchemy.orm import Session
-from .. import models, schemas
+from ..models import models
+from ..schemas import schemas
 from datetime import datetime, timezone
 
-def save_data_into_db(db: Session, player_id: int, session_data: schemas.VAScaleGameSessionCreate):
+def save_data_into_db(db: Session, player_id: int, session_data: schemas.VAScaleGameSubmitRequest):
     # 1. Create the main session record
     db_session = models.VAScaleGameSession(
         player_id=player_id,

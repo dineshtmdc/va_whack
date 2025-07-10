@@ -1,17 +1,18 @@
 # ==============================================================================
 # This file is responsible for generating AI-powered summary reports.
+# va_whack.api\app\services\report_service.py
 # ==============================================================================
 from typing import List
 from openai import OpenAI
 
-from app.models import EngagementGameSession, Player, VAScaleGameSession
+from app.models.models import EngagementGame, Player, VAScaleGame
 from ..core.config import settings
 
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 # Uses OpenAI's GPT model to generate a user-friendly summary of the test results across all 5 levels.
-def generate_ai_summary(player: Player, va_scale_game: VAScaleGameSession, engagement_games: List[EngagementGameSession]) -> str:
+def generate_ai_summary(player: Player, va_scale_game: VAScaleGame, engagement_games: List[EngagementGame]) -> str:
     if not settings.OPENAI_API_KEY:
         return "AI reporting is not configured."
 

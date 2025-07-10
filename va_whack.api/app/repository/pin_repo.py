@@ -1,10 +1,11 @@
 # ==============================================================================
 # This file contains data access logic for the PinNumber model.
+# va_whack.api\app\repository\pin_repo.py
 # ==============================================================================
 
 from sqlalchemy.orm import Session
 from datetime import datetime
-from .. import models
+from ..models import models
 
 # ==============================================================================
 # Creates a new PIN record in the database.
