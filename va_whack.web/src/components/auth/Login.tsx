@@ -191,7 +191,7 @@ export const Login = () => {
 			</div>
 			{/* Version Info */}
 			<div className="absolute bottom-4 right-6 text-sm font-semibold text-white bg-blue-700 px-3 py-1 rounded-full shadow-md z-10">
-				Version V3.0.0
+				V:3.0.0
 			</div>
 		</div>
 	);
