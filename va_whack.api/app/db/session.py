@@ -1,6 +1,7 @@
 # ==============================================================================
 # This file is responsible for setting up and managing the database connection.
 # It provides a dependency-injectable way to get a database session for each request.
+# va_whack.api\app\db\session.py
 # ==============================================================================
 
 from sqlalchemy import create_engine

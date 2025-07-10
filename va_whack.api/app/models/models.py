@@ -1,10 +1,10 @@
 # ==============================================================================
 # This file defines the SQLAlchemy ORM models.
 # Each class corresponds to a table in the PostgreSQL database.
+# va_whack.api\app\models\models.py
 # ==============================================================================
 
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Enum
-
 from sqlalchemy.orm import relationship
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -72,7 +72,7 @@ class PinNumber(Base):
 # ==============================================================================
 # Represents a single VA Scale Game session.
 # ==============================================================================
-class VAScaleGameSession(Base):
+class VAScaleGame(Base):
 
     __tablename__ = "va_scale_game_sessions"
 
@@ -171,7 +171,7 @@ class VAScaleGameScore(Base):
 # ==============================================================================
 # Represents a single Engagement Game session.
 # ==============================================================================
-class EngagementGameSession(Base):
+class EngagementGame(Base):
 
     __tablename__ = "engagement_game_sessions"
 

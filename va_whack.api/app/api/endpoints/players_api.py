@@ -1,6 +1,7 @@
 # ==============================================================================
 # This file defines the API endpoints related to player management.
 # This includes registration and initial one-time PIN verification.
+# va_whack.api\app\api\endpoints\players_api.py
 # ==============================================================================
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,8 +9,8 @@ from sqlalchemy.orm import Session
 import secrets
 from datetime import datetime, timezone, timedelta
 
-from ... import schemas
-from ...repository import player as player_repo, pin as pin_repo
+from ...schemas import schemas
+from ...repository import player_repo, pin_repo
 from ...db.session import get_db
 from ...services import email_service
 from ...core.config import settings
@@ -17,8 +18,8 @@ from ...core import security
 
 router = APIRouter()
 
-@router.post("/register", response_model=schemas.PlayerRead, status_code=201)
-def register_player(player_in: schemas.PlayerCreate, db: Session = Depends(get_db)):
+@router.post("/register", response_model=schemas.PlayerRegisterResponse, status_code=201)
+def register_player(player_in: schemas.PlayerRegisterRequest, db: Session = Depends(get_db)):
     db_player = player_repo.get_by_email(db, email=player_in.email)
     if db_player:
         raise HTTPException(status_code=400, detail="Email already registered")

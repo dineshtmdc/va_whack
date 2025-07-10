@@ -1,14 +1,16 @@
 # ==============================================================================
 # This file contains data access logic for the Engagement Game models.
+# va_whack.api\app\repository\engagement_game_repo.py
 # ==============================================================================
 from sqlalchemy.orm import Session
-from .. import models, schemas
+from ..models import models
+from ..schemas import schemas
 from datetime import datetime, timezone
 
 
-def save_data_into_db(db: Session, player_id: int, session_data: schemas.EngagementGameSessionCreate):
+def save_data_into_db(db: Session, player_id: int, session_data: schemas.EngagementGameSubmitRequest):
     # 1. Create EngagementGameSession (main session entry)
-    db_session = models.EngagementGameSession(
+    db_session = models.EngagementGame(
         player_id=player_id,
         game_id=session_data.game_id,
         master_session_id=session_data.master_session_id,

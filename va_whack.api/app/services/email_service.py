@@ -1,6 +1,7 @@
 # ==============================================================================
 # This file contains services that interact with external APIs.
 # It abstracts the logic for sending emails via SendGrid.
+# va_whack.api\app\services\email_service.py
 # ==============================================================================
 
 from typing import List
@@ -8,7 +9,7 @@ import datetime
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-from app.models import EngagementGameSession, VAScaleGameSession
+from app.models.models import EngagementGame, VAScaleGame
 from ..core.config import settings
 
 
@@ -130,8 +131,8 @@ def send_summary_report(
     recipient_email: str,
     player_name: str,
     report: str,
-    scale_game: VAScaleGameSession,
-    engagement_games: List[EngagementGameSession]
+    scale_game: VAScaleGame,
+    engagement_games: List[EngagementGame]
 ):
     formatted_report = report.replace('\n', '<br>')
 

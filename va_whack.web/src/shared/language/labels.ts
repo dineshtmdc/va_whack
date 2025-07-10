@@ -5,7 +5,7 @@ export type Lang = 'en' | 'mi';
 export const labels = {
 	en: {
 		// Login & Game Selector Labels
-		centerTitle: 'Welcome to Vision Acuity Game Center',
+		centerTitle: 'Vision Testing App with Gamification',
 		centerSubtitle: 'Welcome',
 		login: 'Login',
 		newPlayer: 'New Player',
@@ -79,7 +79,7 @@ export const labels = {
 
 	mi: {
 		// Translations (Māori)
-		centerTitle: 'Nau mai ki te Pokapū Kēmu Tirohanga Mata',
+		centerTitle: 'Taupānga Whakamātau Kite me te Whakamahi Kēmu',
 		centerSubtitle: 'Nau mai',
 		login: 'Takiuru',
 		newPlayer: 'Kaitākaro Hou',
