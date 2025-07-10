@@ -45,9 +45,9 @@ class Player(Base):
 
     is_verified = Column(Boolean, default=False, nullable=False)
  
-    scale_game_sessions = relationship("VAScaleGameSession", back_populates="player")
+    scale_game_sessions = relationship("VAScaleGame", back_populates="player")
 
-    engagement_game_sessions = relationship("EngagementGameSession", back_populates="player")
+    engagement_game_sessions = relationship("EngagementGame", back_populates="player")
 
 # ==============================================================================
 # Represents a verification PIN sent to a player.
@@ -124,7 +124,7 @@ class VAScaleGameConfig(Base):
 
     viewing_distance_cm = Column(Integer, nullable=False)
  
-    session = relationship("VAScaleGameSession", back_populates="config")
+    session = relationship("VAScaleGame", back_populates="config")
  
 class ScaleLogEntry(Base):
 
@@ -148,7 +148,7 @@ class ScaleLogEntry(Base):
 
     user_response = Column(String(100))
  
-    session = relationship("VAScaleGameSession", back_populates="log_entries")
+    session = relationship("VAScaleGame", back_populates="log_entries")
  
 class VAScaleGameScore(Base):
 
@@ -166,7 +166,7 @@ class VAScaleGameScore(Base):
 
     final_va = Column(Float, nullable=True)
  
-    session = relationship("VAScaleGameSession", back_populates="score")
+    session = relationship("VAScaleGame", back_populates="score")
 
 # ==============================================================================
 # Represents a single Engagement Game session.
@@ -217,7 +217,7 @@ class EngagementGameConfig(Base):
 
     bg_color = Column(String(20), nullable=False)
  
-    session = relationship("EngagementGameSession", back_populates="config")
+    session = relationship("EngagementGame", back_populates="config")
  
 class AppearanceEvent(Base):
 
@@ -257,7 +257,7 @@ class AppearanceEvent(Base):
     
     distance_from_center = Column(Float, nullable=True)
  
-    session = relationship("EngagementGameSession", back_populates="events")
+    session = relationship("EngagementGame", back_populates="events")
  
 class EngagementScoreSummary(Base):
 
@@ -297,6 +297,6 @@ class EngagementScoreSummary(Base):
 
     total_fake_trials = Column(Integer, nullable=False)
  
-    session = relationship("EngagementGameSession", back_populates="score")
+    session = relationship("EngagementGame", back_populates="score")
 
  
