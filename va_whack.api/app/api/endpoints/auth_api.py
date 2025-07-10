@@ -1,13 +1,14 @@
 # ==============================================================================
 # This file defines the API endpoints for authentication (login).
+# va_whack.api\app\api\endpoints\auth_api.py
 # ==============================================================================
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
 import secrets
 
-from ... import schemas
-from ...repository import player as player_repo, pin as pin_repo
+from ...schemas import schemas
+from ...repository import player_repo, pin_repo
 from ...db.session import get_db
 from ...services import email_service
 from ...core.config import settings

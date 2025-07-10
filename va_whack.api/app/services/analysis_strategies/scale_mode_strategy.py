@@ -1,10 +1,9 @@
 # ==============================================================================
-# app\services\analysis_strategies\scale_mode_strategy.py
+# va_whack.api\app\services\analysis_strategies\scale_mode_strategy.py
 # ==============================================================================
 
 from .base_strategy import AnalysisStrategy
-from typing import List, Dict, Any, Optional
-from ... import schemas
+from ...schemas import schemas
 from collections import defaultdict
 
 
@@ -12,12 +11,12 @@ class ScaleModeStrategy(AnalysisStrategy):
 
     # Calculates the final visual acuity (VA) score from a log of responses
     # using the principles of the ETDRS-Fast algorithm.
-    def analyze(self, session_data: schemas.VAScaleGameSessionCreate) -> schemas.ScaleGameScore:
+    def analyze(self, session_data: schemas.VAScaleGameSubmitRequest) -> schemas.VAScaleGameScoreResponse:
         
         log_data = session_data.log_entries
 
         if not log_data:
-            return schemas.ScaleGameScore(
+            return schemas.VAScaleGameScoreResponse(
                 best_va = 1.0,
                 n = 0,
                 b = 0,
@@ -62,7 +61,7 @@ class ScaleModeStrategy(AnalysisStrategy):
         # Step 4: Final VA calculation
         final_va = (va_best - (0.02 * n)) + (0.02 * b)
 
-        return schemas.ScaleGameScore(
+        return schemas.VAScaleGameScoreResponse(
             best_va=round(va_best, 2),
             n=n,
             b=b,

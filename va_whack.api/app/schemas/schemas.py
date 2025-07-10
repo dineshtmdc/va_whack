@@ -1,6 +1,7 @@
 # ==============================================================================
 # This file defines the Pydantic schemas for the API.
 # Schemas are used for data validation, serialization, and API documentation.
+# va_whack.api\app\schemas\schemas.py
 # ==============================================================================
 
 from pydantic import BaseModel, EmailStr, Field
@@ -21,7 +22,7 @@ class BaseCamelModel(BaseModel):
 # Schema for creating a new player.
 # This Pydantic model defines the data required for a player registration request.
 # ==============================================================================
-class PlayerCreate(BaseModel):
+class PlayerRegisterRequest(BaseModel):
     name: str
     email: EmailStr
     age_group: str
@@ -30,7 +31,7 @@ class PlayerCreate(BaseModel):
 # This Pydantic model defines the data shape for API responses containing player info.
 # ==============================================================================
 
-class PlayerRead(BaseCamelModel):
+class PlayerRegisterResponse(BaseCamelModel):
     id: int
     name: str
     email: EmailStr
@@ -45,6 +46,14 @@ class PinVerify(BaseModel):
     pin: str
 
 # ==============================================================================
+# Schema for the API response containing a JWT access token.
+# ==============================================================================
+class Token(BaseModel):
+    access_token: str
+    name: str
+    ageGroup: str
+
+# ==============================================================================
 # Schema for requesting a new verification PIN (for registration or login).
 # ==============================================================================
 class PinRequest(BaseModel):
@@ -57,13 +66,7 @@ class TokenRequest(BaseModel):
     email: EmailStr
     pin: str
 
-# ==============================================================================
-# Schema for the API response containing a JWT access token.
-# ==============================================================================
-class Token(BaseModel):
-    access_token: str
-    name: str
-    ageGroup: str
+
 
 # ==============================================================================
 # Schemas for Game Data Submission
@@ -93,20 +96,20 @@ class ScaleLogEntry(BaseCamelModel):
     logmar: float
     user_response: str
 
-class ScaleGameScore(BaseCamelModel):
+class VAScaleGameScoreResponse(BaseCamelModel):
     best_va: Optional[float] = Field(None, alias="bestVA")
     n: int
     b: int
     final_va: Optional[float] = Field(None, alias="finalVA")
 
-class VAScaleGameSessionCreate(BaseCamelModel):
+class VAScaleGameSubmitRequest(BaseCamelModel):
     email: str
     master_session_id: Optional[str]
     start_time: int
     end_time: Optional[int] = None
     config: VAScaleGameConfig
     log_entries: List[ScaleLogEntry]
-    score: ScaleGameScore
+    score: VAScaleGameScoreResponse
 
 # ------------------------------------------------------------------------------
 # Engagement Game Schemas
@@ -136,7 +139,7 @@ class EngagementGameConfig(BaseCamelModel):
     hole_color: str
     bg_color: str
 
-class EngagementScoreSummary(BaseCamelModel):
+class EngagementScoreResponse(BaseCamelModel):
     detection_speed: Optional[float] = Field(None, alias="SS1_detectionSpeed")
     detection_accuracy: Optional[float] = Field(None, alias="SS2_detectionAccuracy")
     spatial_uniformity: Optional[float] = Field(None, alias="SS3_spatialUniformity")
@@ -153,7 +156,7 @@ class EngagementScoreSummary(BaseCamelModel):
     total_mole_trials: int
     total_fake_trials: int
 
-class EngagementGameSessionCreate(BaseCamelModel):
+class EngagementGameSubmitRequest(BaseCamelModel):
     game_id: str
     email: str
     master_session_id: Optional[str]
@@ -161,22 +164,22 @@ class EngagementGameSessionCreate(BaseCamelModel):
     events: List[AppearanceEvent]
     start_time: int
     end_time: Optional[int] = None
-    scores: EngagementScoreSummary
+    scores: EngagementScoreResponse
 
 # ------------------------------------------------------------------------------
 # # Retrieve full game session history Schemas
 # ------------------------------------------------------------------------------
 
 class GameHistoryResponse(BaseModel):
-    scaleGames: List[VAScaleGameSessionCreate]
-    engagementGames: List[EngagementGameSessionCreate]
+    scaleGames: List[VAScaleGameSubmitRequest]
+    engagementGames: List[EngagementGameSubmitRequest]
 
     @classmethod
     def from_orm_models(cls, scale_games, engagement_games, email: str):
         from datetime import datetime
 
         scale_game_responses = [
-            VAScaleGameSessionCreate(
+            VAScaleGameSubmitRequest(
                 email=email,
                 master_session_id=game.master_session_id,
                 start_time=int(game.start_time.timestamp()),
@@ -206,7 +209,7 @@ class GameHistoryResponse(BaseModel):
                     )
                     for entry in game.log_entries
                 ],
-                score=ScaleGameScore(
+                score=VAScaleGameScoreResponse(
                 best_va=game.score.best_va,
                 n=game.score.n,
                 b=game.score.b,
@@ -217,7 +220,7 @@ class GameHistoryResponse(BaseModel):
         ]
 
         engagement_game_responses = [
-            EngagementGameSessionCreate(
+            EngagementGameSubmitRequest(
                 email=email,
                 game_id=game.game_id,
                 master_session_id=game.master_session_id,
@@ -251,7 +254,7 @@ class GameHistoryResponse(BaseModel):
                     )
                     for event in game.events
                 ],
-                scores=EngagementScoreSummary(
+                scores=EngagementScoreResponse(
                     detection_speed=game.score.detection_speed,
                     detection_accuracy=game.score.detection_accuracy,
                     spatial_uniformity=game.score.spatial_uniformity,

@@ -1,10 +1,13 @@
+# ==============================================================================
+# va_whack.api\app\services\analysis_strategies\engagement_mode_strategy.py
+# ==============================================================================
 from .base_strategy import AnalysisStrategy
 from typing import Dict, Optional
-from ... import schemas
+from ...schemas import schemas
 import statistics
 
 class EngagementModeStrategy(AnalysisStrategy):
-    def analyze(self, session_data: schemas.EngagementGameSessionCreate) -> schemas.EngagementScoreSummary:
+    def analyze(self, session_data: schemas.EngagementGameSubmitRequest) -> schemas.EngagementScoreResponse:
 
         events = session_data.events
         total_trials = len(events)
@@ -136,7 +139,7 @@ class EngagementModeStrategy(AnalysisStrategy):
             2
         )
 
-        return schemas.EngagementScoreSummary(
+        return schemas.EngagementScoreResponse(
             detection_speed=detection_speed,
             detection_accuracy=detection_accuracy,
             spatial_uniformity=spatial_uniformity,

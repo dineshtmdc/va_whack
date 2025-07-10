@@ -1,6 +1,7 @@
 # ==============================================================================
 # This file is responsible for managing application-wide settings.
 # It loads configuration from environment variables for security and flexibility.
+# va_whack.api\app\core\security.py
 # ==============================================================================
 
 import os
