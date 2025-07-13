@@ -6,8 +6,6 @@
  * @format
  */
 
-/** @format */
-
 import type { IUserDetails } from '..';
 
 export interface IMole {

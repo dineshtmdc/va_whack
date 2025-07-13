@@ -26,15 +26,15 @@ const MOBILE_GAME_LEVELS: Record<string, { config: IEnagementGameConfig; duratio
 		duration: 20,
 	},
 	Medium: {
-		config: { mouseSize: 64, holeSize: 64, holeGap: 6, fakeCount: 2, spawnInterval: 1500, holeColor: '#666666', bgColor: '#f8f8f8' },
+		config: { mouseSize: 64, holeSize: 64, holeGap: 6, fakeCount: 2, spawnInterval: 1600, holeColor: '#666666', bgColor: '#f8f8f8' },
 		duration: 20,
 	},
 	Hard: {
-		config: { mouseSize: 48, holeSize: 48, holeGap: 4, fakeCount: 5, spawnInterval: 1000, holeColor: '#666666', bgColor: '#f8f8f8' },
+		config: { mouseSize: 48, holeSize: 48, holeGap: 4, fakeCount: 5, spawnInterval: 1300, holeColor: '#666666', bgColor: '#f8f8f8' },
 		duration: 20,
 	},
 	'Very Hard': {
-		config: { mouseSize: 36, holeSize: 36, holeGap: 2, fakeCount: 8, spawnInterval: 700, holeColor: '#666666', bgColor: '#f8f8f8' },
+		config: { mouseSize: 36, holeSize: 36, holeGap: 2, fakeCount: 8, spawnInterval: 1000, holeColor: '#666666', bgColor: '#f8f8f8' },
 		duration: 20,
 	},
 };
@@ -48,15 +48,15 @@ const DESKTOP_GAME_LEVELS: Record<string, { config: IEnagementGameConfig; durati
 		duration: 20,
 	},
 	Medium: {
-		config: { mouseSize: 96, holeSize: 96, holeGap: 8, fakeCount: 2, spawnInterval: 1500, holeColor: '#666666', bgColor: '#f0f0f0' },
+		config: { mouseSize: 96, holeSize: 96, holeGap: 8, fakeCount: 2, spawnInterval: 1600, holeColor: '#666666', bgColor: '#f0f0f0' },
 		duration: 20,
 	},
 	Hard: {
-		config: { mouseSize: 64, holeSize: 64, holeGap: 4, fakeCount: 5, spawnInterval: 1000, holeColor: '#666666', bgColor: '#f0f0f0' },
+		config: { mouseSize: 64, holeSize: 64, holeGap: 4, fakeCount: 5, spawnInterval: 1300, holeColor: '#666666', bgColor: '#f0f0f0' },
 		duration: 20,
 	},
 	'Very Hard': {
-		config: { mouseSize: 48, holeSize: 48, holeGap: 2, fakeCount: 8, spawnInterval: 700, holeColor: '#666666', bgColor: '#f0f0f0' },
+		config: { mouseSize: 48, holeSize: 48, holeGap: 2, fakeCount: 8, spawnInterval: 1000, holeColor: '#666666', bgColor: '#f0f0f0' },
 		duration: 20,
 	},
 };

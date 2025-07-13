@@ -46,7 +46,7 @@ export const GameSelector = ({ user }: IProps) => {
 
 			{/* Push content down on mobile */}
 			<div className='mt-20 sm:mt-0 flex flex-col items-center space-y-4 text-center'>
-				<h1 className='text-4xl font-bold text-gray-900'>{t.gameTitle}</h1>
+				<h1 className='text-4xl font-bold text-gray-900'>{t.centerTitle}</h1>
 				<h2 className='text-2xl font-semibold text-gray-800'>
 					{t.welcome} {user.name || user.email}
 				</h2>
@@ -57,11 +57,11 @@ export const GameSelector = ({ user }: IProps) => {
 			</div>
 
 			<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl'>
-				<GameTile titleKey='engagementTitle' descriptionKey='engagementDescription' icon={<MousePointerClick className='w-8 h-8' />} color={engagementCompleted ? 'bg-gray-300 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'} to={engagementCompleted ? undefined : 'engagement'} disabled={engagementCompleted} />
+				<GameTile titleKey='engagementTitle' descriptionKey='engagementDescription' icon={<MousePointerClick className='w-8 h-8' />} color={engagementCompleted ? 'bg-gray-300 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'} to={engagementCompleted ? undefined : 'engagement'} disabled={engagementCompleted} instruction={t.gameInstructions.engagement} />
 
-				<GameTile titleKey='scaleTitle' descriptionKey='scaleDescription' icon={<ZoomIn className='w-8 h-8' />} color={vaScaleCompleted ? 'bg-gray-300 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'} to={vaScaleCompleted ? undefined : 'va-scale'} disabled={vaScaleCompleted} />
+				<GameTile titleKey='scaleTitle' descriptionKey='scaleDescription' icon={<ZoomIn className='w-8 h-8' />} color={vaScaleCompleted ? 'bg-gray-300 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600'} to={vaScaleCompleted ? undefined : 'va-scale'} disabled={vaScaleCompleted} instruction={t.gameInstructions.scale} />
 
-				<GameTile titleKey='fastTitle' descriptionKey='fastDescription' icon={<Eye className='w-8 h-8' />} color='bg-blue-500 hover:bg-blue-600' to='va-fast' />
+				<GameTile titleKey='fastTitle' descriptionKey='fastDescription' icon={<Eye className='w-8 h-8' />} color='bg-blue-500 hover:bg-blue-600' to='va-fast' instruction={t.gameInstructions.fast} />
 			</div>
 		</div>
 	);
