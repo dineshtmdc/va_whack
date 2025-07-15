@@ -75,6 +75,48 @@ export const labels = {
 		canSee: 'I can see',
 		cantSee: 'I cant see',
 		giveUp: 'I give up',
+
+		// Inside labels.en
+		gameInstructions: {
+			engagement: `This game has 5 levels of increasing difficulty.
+		Your goal is to click on the targets (moles) as soon as they appear.
+		Be careful — some targets are fake moles. Clicking a fake mole counts as a miss.
+		Each hit improves your combo score. Missing a real mole or clicking a fake mole resets your combo.
+		After 3 successful hits in a row, you’ll see a celebration animation.
+		The game ends after all 5 levels are completed.
+		Your accuracy, reaction time, and combo achievements are recorded.`,
+
+			scale: `This test measures your visual acuity using a central circle that changes size.
+		It begins with a large circle in the center.
+		You’ll be asked if you can see the circle clearly ("I can see") or not ("I can't see").
+		After each response, the circle scales up or down based on your answer.
+		If you say "I can't see", the circle gets bigger. If "I can see", it gets smaller.
+		Each level may repeat up to 5 times to confirm consistency.
+		The test ends when your vision threshold is identified.`,
+
+			fast: `This test uses reflexive visual tracking to estimate vision clarity.
+		A target moves across the screen horizontally.
+		Your task is to follow it with your eyes only — don’t move your head.
+		The speed and clarity may change over time.
+		No clicking is needed — just keep your gaze on the target.
+		This helps measure involuntary eye tracking and reflex-based accuracy.`,
+		},
+
+		dataConsent: {
+			title: 'Data Usage Notice',
+			intro: 'This vision testing project collects only minimal personal information : your name, email, and age group and gameplay data. These are used for research and analysis. Your test results will never be made public.',
+			acknowledgement: 'By continuing, you acknowledge that you understand how your data will be handled according to these principles.',
+			accept: 'I Understand',
+
+			principlesIntro: 'Our approach is guided by Ngā Tikanga Paihere — 5 key principles of responsible data use:',
+			principles: {
+				pukenga: 'We have the expertise and work in respectful relationships with communities whose data we collect.',
+				pono: 'We are transparent and honest in how your data is used, protecting your trust in this research.',
+				wananga: 'We follow strong data practices to care for your data throughout the project.',
+				wairua: 'Every data activity we do is purposeful and respects the mana of those involved.',
+				tapu: 'We carefully balance the benefits of research with the protection of your information.',
+			},
+		},
 	},
 
 	mi: {
@@ -147,6 +189,47 @@ export const labels = {
 		canSee: 'Ka kite au', // I can see
 		cantSee: 'Kāore au i te kite', // I can't see
 		giveUp: 'Ka whakarerea e au', // I give up
+
+		gameInstructions: {
+			engagement: `He 5 ngā taumata o tēnei kēmu, ka piki haere te uaua i ia taumata.
+		Ko tāu he pāwhiri i ngā ūnga (ngārara) ka puta i runga i te mata i te tere ka taea.
+		Kia tūpato — kei reira ngā ngārara rūpahu. Mēnā ka pāwhiri koe i tētahi rūpahu, ka kautea hei hē.
+		Ka piki ake tō piro kōmō mēnā ka patu angitu koe i te rārangi.
+		Ka hē koe mēnā ka ngaro tētahi ngārara tūturu, ka pāwhiri rānei i tētahi rūpahu.
+		Ina patua angitu ngā ngārara e toru i te rārangi, ka puta he whakaaturanga whakanui.
+		Ka mutu te kēmu i muri i ngā taumata e 5.
+		Ka rēhita tō tika, tō wa whakautu, me ngā angitu kōmō.`,
+
+			scale: `Ka ine tēnei whakamātautau i tō mātakite mā tētahi porowhita kei te pokapū, ka panoni i tōna rahi.
+		Ka tīmata ki tētahi porowhita nui kei waenganui.
+		Ka ui koe mēnā ka kite koe i te porowhita ("Ka kite au") kāore rānei ("Kāore au i te kite").
+		Ka panoni te rahi o te porowhita i muri i tō whakautu.
+		Ki te mea kāore koe e kite, ka nui haere te porowhita. Ki te mea ka kite koe, ka iti haere.
+		Ka ui anō koe mō taua rahi kotahi tae atu ki te 5 ngā wā hei whakau i te pūmau.
+		Ka mutu te kēmu i te wā ka kitea te paepae mātakitaki.`,
+
+			fast: `Ka whakamahi tēnei whakamātautau i te ūnga neke hei ine i te mārama o te tirohanga ā-whakautu.
+		Ka neke te ūnga i te ahunga whakapae puta noa i te mata.
+		Ko tāu he aru i te ūnga mā ō kanohi anake — kaua e nekeneke tō ūpoko.
+		Ka panoni pea te tere me te āhua māmā o te ūnga i te wā e haere ana.
+		Kāore koe e hiahia ki te pāwhiri — me ū noa ki te ūnga mā ngā kanohi.
+		Ka āwhina tēnei ki te ine i te nekehanga ā-taiao o ngā karu me te tika o te mātakitaki.`,
+		},
+		dataConsent: {
+			title: 'Pānui Whakamahi Raraunga',
+			intro: 'Kei tēnei kaupapa whakamātau tirohanga e kohikohi ana i ngā mōhiohio whaiaro iti noa tō ingoa, īmēra me te rōpū tau  me ngā raraunga kēmu. Ka whakamahia ēnei mō te rangahau. Kāore ō hua whakamātau e whakaputaina ki te marea.',
+			acknowledgement: 'Mā te haere tonu, e whakaae ana koe kua mārama koe ki te whakamahi o ō raraunga i raro i ēnei mātāpono.',
+			accept: 'Kua Mārama Au',
+
+			principlesIntro: 'E ārahina ana tā mātou whakatata e Ngā Tikanga Paihere  e 5 ngā mātāpono mō te whakamahi tika i te raraunga:',
+			principles: {
+				pukenga: 'He pūkenga tō mātou rōpū, ā, ka mahi ngātahi me ngā hapori e pā ana ki te raraunga.',
+				pono: 'He mārama, he pono ā mātou mahi, kia ū te whakawhirinaki ki tēnei rangahau.',
+				wananga: 'Ka tiaki mātou i ō raraunga mā te whai i ngā paerewa pai rawa atu.',
+				wairua: 'He kaupapa whai tikanga ā mātou mahi raraunga, e whakanuia ana te mana o te tangata.',
+				tapu: 'Ka taurite te painga o te rangahau me te tiaki i te haumarutanga o ngā raraunga.',
+			},
+		},
 	},
 } as const;
 

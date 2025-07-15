@@ -9,20 +9,27 @@ type Lang = 'en' | 'mi';
 
 interface UIState {
 	lang: Lang;
+	dataConsentGiven: boolean;
 	setLang: (lang: Lang) => void;
 	toggleLang: () => void;
+	setDataConsentGiven: (value: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
 	persist(
 		(set) => ({
 			lang: 'en',
+			dataConsentGiven: false,
 			setLang: (lang) => set({ lang }),
 			toggleLang: () => set((s) => ({ lang: s.lang === 'en' ? 'mi' : 'en' })),
+			setDataConsentGiven: (value) => set({ dataConsentGiven: value }),
 		}),
 		{
-			name: 'ui-store', // unique name for localStorage
-			partialize: (state) => ({ lang: state.lang }), // only persist lang
+			name: 'ui-store',
+			partialize: (state) => ({
+				lang: state.lang,
+				dataConsentGiven: state.dataConsentGiven,
+			}),
 		}
 	)
 );
