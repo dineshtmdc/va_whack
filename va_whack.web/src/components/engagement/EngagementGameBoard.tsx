@@ -223,7 +223,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	// useEffect 1
 
 	useEffect(() => {
-		hitSoundRefs.current = [new Audio(hitSound), new Audio(kapaaiSound), new Audio(keepGoingSound), new Audio(kiaOraSound), new Audio(weldoneSound)];
+		hitSoundRefs.current = [new Audio(hitSound), new Audio(kapaaiSound), new Audio(keepGoingSound), new Audio(hitSound), new Audio(kiaOraSound), new Audio(hitSound), new Audio(weldoneSound)];
 
 		missSoundRefs.current = [new Audio(missSound), new Audio(nextTimeSound), new Audio(tryAgainSound)];
 
@@ -370,7 +370,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 		GameService.submitEnagementGame(lastSession).then((result) => {
 			if (result) {
 				setScore(result);
-				setScoreDialogOpen(true);
+				// setScoreDialogOpen(true);
 				setScoreCalculated(true);
 				setScoreDialogAcknowledged(false);
 			}
