@@ -53,9 +53,8 @@ export const GameSelector = ({ user }: IProps) => {
 				<h2 className='text-xl text-gray-500'>
 					{t.sessionId}: {sessionId}
 				</h2>
-				<h2 className='text-xl text-gray-600'>{t.chooseMode}</p>
+				<h2 className='text-xl text-gray-600'>{t.chooseMode}</h2>
 			</div>
-
 
 			<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl'>
 				<GameTile titleKey='engagementTitle' descriptionKey='engagementDescription' icon={<MousePointerClick className='w-8 h-8' />} color={engagementCompleted ? 'bg-gray-300 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'} to={engagementCompleted ? undefined : 'engagement'} disabled={engagementCompleted} instruction={t.gameInstructions.engagement} />
