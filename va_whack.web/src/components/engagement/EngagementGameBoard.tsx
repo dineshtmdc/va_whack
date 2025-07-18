@@ -7,8 +7,18 @@ import { Mole, EnagementGameStatistics, EnagementControlPanel } from '..';
 import { FakeMole } from './FakeMole';
 import { Home, RotateCcw, BarChart, Settings, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
-import hitSoundSrc from '../../assets/sounds/hit_sound.mp3';
-import missSoundSrc from '../../assets/sounds/miss_sound.mp3';
+// Hit sounds
+import hitSound from '../../assets/sounds/hit_sound.mp3';
+import kapaaiSound from '../../assets/sounds/kapaai_sound.mp3';
+import keepGoingSound from '../../assets/sounds/keep_going_sound.mp3';
+import kiaOraSound from '../../assets/sounds/kia_ora_sound.mp3';
+import weldoneSound from '../../assets/sounds/weldone_sound.mp3';
+
+// Miss sounds
+import missSound from '../../assets/sounds/miss_sound.mp3';
+import nextTimeSound from '../../assets/sounds/next_time_sound.mp3';
+import tryAgainSound from '../../assets/sounds/try_again_sound.mp3';
+
 import { useGameMasterSessionStore } from '../../shared/zustand/game_master_store';
 import { useIsMobile } from '../hooks/useIsMobile';
 
@@ -117,8 +127,8 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	const [showComboMessage, setShowComboMessage] = useState(false);
 	const [showCountdown, setShowCountdown] = useState(false);
 	const [countdownNumber, setCountdownNumber] = useState<number | null>(null);
-	const hitSoundRef = useRef<HTMLAudioElement | null>(null);
-	const missSoundRef = useRef<HTMLAudioElement | null>(null);
+	const hitSoundRefs = useRef<HTMLAudioElement[]>([]);
+	const missSoundRefs = useRef<HTMLAudioElement[]>([]);
 	console.log(comboCount);
 
 	const [config, setConfig] = useState<IEnagementGameConfig>(
@@ -211,16 +221,25 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 	}, [rows, cols, config.mouseSize, config.fakeCount, addEvents]);
 
 	// useEffect 1
+
 	useEffect(() => {
-		hitSoundRef.current = new Audio(hitSoundSrc);
-		missSoundRef.current = new Audio(missSoundSrc);
+		hitSoundRefs.current = [new Audio(hitSound), new Audio(kapaaiSound), new Audio(keepGoingSound), new Audio(kiaOraSound), new Audio(weldoneSound)];
 
-		hitSoundRef.current.load();
-		missSoundRef.current.load();
+		missSoundRefs.current = [new Audio(missSound), new Audio(nextTimeSound), new Audio(tryAgainSound)];
 
-		hitSoundRef.current.volume = 1.0;
-		missSoundRef.current.volume = 1.0;
+		[...hitSoundRefs.current, ...missSoundRefs.current].forEach((audio) => {
+			audio.load();
+			audio.volume = 1.0;
+		});
 	}, []);
+
+	const playRandomSound = (list: HTMLAudioElement[]) => {
+		const i = Math.floor(Math.random() * list.length);
+		const sound = list[i];
+		sound.pause();
+		sound.currentTime = 0;
+		sound.play();
+	};
 
 	// useEffect 2
 	useEffect(() => {
@@ -593,7 +612,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 											if (gameOver || showComboMessage) return;
 
 											e.stopPropagation();
-											hitSoundRef.current?.play();
+											playRandomSound(hitSoundRefs.current);
 											setHitCount((prev) => prev + 1);
 											setUserClickedThisCycle(true);
 											setMice((prev) => prev.filter((m) => m.id !== mouseHere.id));
@@ -630,7 +649,7 @@ export const EngagementGameBoard = ({ onExit, user }: IProps) => {
 										size={config.mouseSize}
 										onClick={(e) => {
 											e.stopPropagation();
-											missSoundRef.current?.play();
+											playRandomSound(missSoundRefs.current);
 											if (gameOver || showComboMessage) return;
 											setUserClickedThisCycle(true);
 											setComboCount(0); // Reset combo
