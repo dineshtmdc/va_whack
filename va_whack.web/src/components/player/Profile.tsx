@@ -226,9 +226,9 @@ export const Profile = ({ user, onExit }: IProps) => {
 												<BarChart3 className='w-5 h-5' /> {t.profileVAScaleTitle}
 											</h3>
 											<p className='text-sm text-gray-500'>
-												{t.profileStart}: {new Date(group.scale.startTime).toLocaleString()}
+												{t.profileStart}: {new Date(group.scale.startTime * 1000).toLocaleString()}
 												<br />
-												{t.profileEnd}: {group.scale.endTime ? new Date(group.scale.endTime).toLocaleString() : t.profileInProgress}
+												{t.profileEnd}: {group.scale.endTime ? new Date(group.scale.endTime * 1000).toLocaleString() : t.profileInProgress}
 											</p>
 											<p className='mt-2 text-sm text-gray-700'>
 												<b>{t.profileConfig}:</b> HoleSize = {group.scale.config.holeSize} mm, Ratio = {group.scale.config.ratio}, Gap = {group.scale.config.holeGap}px, Distance = {group.scale.config.viewingDistanceCm} cm
