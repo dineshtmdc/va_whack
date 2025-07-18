@@ -56,7 +56,7 @@ export const Profile = ({ user, onExit }: IProps) => {
 	const [activeScoreKeyMap, setActiveScoreKeyMap] = useState<Record<string, string | null>>({});
 	const [loadingMasterIdForDownload, setLoadingMasterIdForDownload] = useState<string | null>(null);
 	const [loadingMasterIdForEmail, setLoadingMasterIdForEmail] = useState<string | null>(null);
-
+	const [loading, setLoading] = useState(true);
 	useEffect(() => {
 		const fetchGameHistory = async () => {
 			try {
@@ -67,6 +67,8 @@ export const Profile = ({ user, onExit }: IProps) => {
 				}
 			} catch (error) {
 				console.error('Error fetching game history:', error);
+			} finally {
+				setLoading(false);
 			}
 		};
 		fetchGameHistory();
@@ -128,6 +130,17 @@ export const Profile = ({ user, onExit }: IProps) => {
 			setLoadingMasterIdForEmail(null);
 		}
 	};
+
+	if (loading) {
+		return (
+			<div className='flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-100'>
+				<div className='flex flex-col items-center gap-4'>
+					<div className='w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin'></div>
+					<p className='text-gray-700 text-sm'>Loading game history...</p>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className='relative min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 p-6'>
