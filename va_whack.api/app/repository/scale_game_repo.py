@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 def save_data_into_db(db: Session, player_id: int, session_data: schemas.VAScaleGameSubmitRequest):
     # 1. Create the main session record
-    db_session = models.VAScaleGameSession(
+    db_session = models.VAScaleGame(
         player_id=player_id,
         start_time=datetime.fromtimestamp(session_data.start_time / 1000, tz=timezone.utc),
         master_session_id=session_data.master_session_id,
