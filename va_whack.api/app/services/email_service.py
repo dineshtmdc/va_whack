@@ -4,14 +4,95 @@
 # va_whack.api\app\services\email_service.py
 # ==============================================================================
 
-from typing import List
 import datetime
+import time
+import smtplib
+from email.mime.text import MIMEText
+from typing import Optional, List
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import Mail, Email
+from python_http_client.exceptions import HTTPError
 
 from app.models.models import EngagementGame, VAScaleGame
 from ..core.config import settings
 
+RETRYABLE_STATUSES = {421, 429, 500, 502, 503, 504}
+
+def _send_via_sendgrid(message: Mail, max_retries: int = 3, backoff_seconds: int = 2) -> bool:
+    sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+    attempt = 0
+    while True:
+        try:
+            resp = sg.send(message)
+            # SendGrid returns 202 on success
+            if resp.status_code == 202:
+                return True
+            # If it's a retryable code, backoff and retry
+            if resp.status_code in RETRYABLE_STATUSES and attempt < max_retries:
+                attempt += 1
+                time.sleep(backoff_seconds ** attempt)
+                continue
+            # Non-retryable or exhausted retries
+            print(f"SendGrid failed ({resp.status_code}): {resp.body}")
+            return False
+        except HTTPError as e:
+            status = getattr(e, "status_code", None)
+            body = getattr(e, "body", str(e))
+            print(f"SendGrid HTTPError {status}: {body}")
+            if status in RETRYABLE_STATUSES and attempt < max_retries:
+                attempt += 1
+                time.sleep(backoff_seconds ** attempt)
+                continue
+            return False
+        except Exception as e:
+            print(f"Unexpected SendGrid error: {e}")
+            if attempt < max_retries:
+                attempt += 1
+                time.sleep(backoff_seconds ** attempt)
+                continue
+            return False
+
+def _send_via_gmail_smtp(to_email: str, subject: str, html_content: str) -> bool:
+    """
+    Fallback path. Requires:
+      - settings.GMAIL_SMTP_USER = your Gmail
+      - settings.GMAIL_SMTP_APP_PASSWORD = 16-char app password
+    """
+    try:
+        msg = MIMEText(html_content, "html")
+        msg["Subject"] = subject
+        msg["From"] = settings.GMAIL_SMTP_USER
+        msg["To"] = to_email
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(settings.GMAIL_SMTP_USER, settings.GMAIL_SMTP_APP_PASSWORD)
+            server.sendmail(settings.GMAIL_SMTP_USER, [to_email], msg.as_string())
+        return True
+    except Exception as e:
+        print(f"Gmail SMTP fallback failed: {e}")
+        return False
+
+def send_email(to_email: str, subject: str, html_content: str, player_name: Optional[str] = "User") -> bool:
+    message = Mail(
+        from_email=Email(settings.SENDER_EMAIL, name="Vision Testing App"),
+        to_emails=to_email,
+        subject=subject,
+        html_content=html_content
+    )
+    # Helps some providers; keeps the thread consistent
+    message.reply_to = settings.SENDER_EMAIL
+
+    ok = _send_via_sendgrid(message)
+    if ok:
+        return True
+
+    # Optional: fallback
+    if getattr(settings, "ENABLE_GMAIL_FALLBACK", False):
+        print("Falling back to Gmail SMTP…")
+        return _send_via_gmail_smtp(to_email, subject, html_content)
+
+    return False
 
 def build_common_email_template(player_name: str, content_html: str) -> str:
     return f"""
@@ -109,21 +190,7 @@ def send_verification_pin(recipient_email: str, pin: str):
 
     html_content = build_common_email_template("User", pin_html)
 
-    message = Mail(
-        from_email=settings.SENDER_EMAIL,
-        to_emails=recipient_email,
-        subject='Vision Testing App Verification Code',
-        html_content=html_content
-    )
-
-    try:
-        sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-        response = sg.send(message)
-        print(f"Email sent to {recipient_email}, status code: {response.status_code}")
-        return True
-    except Exception as e:
-        print(f"Error sending email: {e}")
-        return False
+    return send_email(recipient_email, "Vision Testing App Verification Code", html_content)
 
 
 # Sends the AI-generated summary report to the player
@@ -187,19 +254,4 @@ def send_summary_report(
     """
 
     html_content = build_common_email_template(player_name, combined_content)
-
-    message = Mail(
-        from_email=settings.SENDER_EMAIL,
-        to_emails=recipient_email,
-        subject='Your Vision Test Report and Summary',
-        html_content=html_content
-    )
-
-    try:
-        sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-        response = sg.send(message)
-        print(f"Summary report sent to {recipient_email}, status code: {response.status_code}")
-        return True
-    except Exception as e:
-        print(f"Error sending summary report: {e}")
-        return False
+    return send_email(recipient_email, "Your Vision Test Report and Summary", html_content, player_name)
