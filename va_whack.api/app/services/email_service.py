@@ -1,61 +1,23 @@
 # ==============================================================================
 # This file contains services that interact with external APIs.
-# It abstracts the logic for sending emails via SendGrid.
+# It now sends emails via Gmail SMTP only.
 # va_whack.api\app\services\email_service.py
 # ==============================================================================
 
 import datetime
-import time
 import smtplib
 from email.mime.text import MIMEText
 from typing import Optional, List
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email
-from python_http_client.exceptions import HTTPError
 
 from app.models.models import EngagementGame, VAScaleGame
 from ..core.config import settings
 
-RETRYABLE_STATUSES = {421, 429, 500, 502, 503, 504}
-
-def _send_via_sendgrid(message: Mail, max_retries: int = 3, backoff_seconds: int = 2) -> bool:
-    sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-    attempt = 0
-    while True:
-        try:
-            resp = sg.send(message)
-            # SendGrid returns 202 on success
-            if resp.status_code == 202:
-                return True
-            # If it's a retryable code, backoff and retry
-            if resp.status_code in RETRYABLE_STATUSES and attempt < max_retries:
-                attempt += 1
-                time.sleep(backoff_seconds ** attempt)
-                continue
-            # Non-retryable or exhausted retries
-            print(f"SendGrid failed ({resp.status_code}): {resp.body}")
-            return False
-        except HTTPError as e:
-            status = getattr(e, "status_code", None)
-            body = getattr(e, "body", str(e))
-            print(f"SendGrid HTTPError {status}: {body}")
-            if status in RETRYABLE_STATUSES and attempt < max_retries:
-                attempt += 1
-                time.sleep(backoff_seconds ** attempt)
-                continue
-            return False
-        except Exception as e:
-            print(f"Unexpected SendGrid error: {e}")
-            if attempt < max_retries:
-                attempt += 1
-                time.sleep(backoff_seconds ** attempt)
-                continue
-            return False
 
 def _send_via_gmail_smtp(to_email: str, subject: str, html_content: str) -> bool:
     """
-    Fallback path. Requires:
-      - settings.GMAIL_SMTP_USER = your Gmail
+    Send email using Gmail's free SMTP servers.
+    Requires:
+      - settings.GMAIL_SMTP_USER = your Gmail address
       - settings.GMAIL_SMTP_APP_PASSWORD = 16-char app password
     """
     try:
@@ -70,29 +32,14 @@ def _send_via_gmail_smtp(to_email: str, subject: str, html_content: str) -> bool
             server.sendmail(settings.GMAIL_SMTP_USER, [to_email], msg.as_string())
         return True
     except Exception as e:
-        print(f"Gmail SMTP fallback failed: {e}")
+        print(f"Gmail SMTP failed: {e}")
         return False
 
+
 def send_email(to_email: str, subject: str, html_content: str, player_name: Optional[str] = "User") -> bool:
-    message = Mail(
-        from_email=Email(settings.SENDER_EMAIL, name="Vision Testing App"),
-        to_emails=to_email,
-        subject=subject,
-        html_content=html_content
-    )
-    # Helps some providers; keeps the thread consistent
-    message.reply_to = settings.SENDER_EMAIL
+    """Main send function – always uses Gmail SMTP now."""
+    return _send_via_gmail_smtp(to_email, subject, html_content)
 
-    ok = _send_via_sendgrid(message)
-    if ok:
-        return True
-
-    # Optional: fallback
-    if getattr(settings, "ENABLE_GMAIL_FALLBACK", False):
-        print("Falling back to Gmail SMTP…")
-        return _send_via_gmail_smtp(to_email, subject, html_content)
-
-    return False
 
 def build_common_email_template(player_name: str, content_html: str) -> str:
     return f"""
@@ -187,9 +134,7 @@ def send_verification_pin(recipient_email: str, pin: str):
         <p>This PIN will expire in <strong>{settings.PIN_EXPIRATION_MINUTES} minutes</strong>.</p>
         <p>If you did not request this, please ignore this email.</p>
     """
-
     html_content = build_common_email_template("User", pin_html)
-
     return send_email(recipient_email, "Vision Testing App Verification Code", html_content)
 
 
@@ -217,7 +162,6 @@ def send_summary_report(
     # Add all 5 Engagement Game levels
     difficulty_levels = ["Very Easy", "Easy", "Medium", "Hard", "Very Hard"]
     engagement_blocks = []
-
     for i, game in enumerate(engagement_games[:5]):
         score = game.score
         level = difficulty_levels[i] if i < len(difficulty_levels) else f"Level {i+1}"
