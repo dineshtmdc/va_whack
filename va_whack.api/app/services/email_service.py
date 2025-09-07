@@ -26,7 +26,7 @@ def _send_via_gmail_smtp(to_email: str, subject: str, html_content: str) -> bool
         msg["From"] = settings.GMAIL_SMTP_USER
         msg["To"] = to_email
 
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT) as server:
             server.starttls()
             server.login(settings.GMAIL_SMTP_USER, settings.GMAIL_SMTP_APP_PASSWORD)
             server.sendmail(settings.GMAIL_SMTP_USER, [to_email], msg.as_string())
