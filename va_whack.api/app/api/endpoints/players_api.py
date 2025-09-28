@@ -30,7 +30,7 @@ def register_player(player_in: schemas.PlayerRegisterRequest, db: Session = Depe
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.PIN_EXPIRATION_MINUTES)
     pin_repo.create(db=db, email=player_in.email, pin=pin, expires_at=expires_at)
 
-    email_service.send_verification_pin(recipient_email=player_in.email, pin=pin)
+    email_service.send_verification_pin(user_name=new_player.name, recipient_email=player_in.email, pin=pin)
 
     return new_player
 
