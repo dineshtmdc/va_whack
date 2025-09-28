@@ -31,7 +31,7 @@ def request_login_pin(request: schemas.PinRequest, db: Session = Depends(get_db)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.PIN_EXPIRATION_MINUTES)
     pin_repo.create(db=db, email=request.email, pin=pin, expires_at=expires_at)
 
-    email_service.send_verification_pin(recipient_email=request.email, pin=pin)
+    email_service.send_verification_pin(user_name=player.name, recipient_email=request.email, pin=pin)
 
     return {"message": "A login PIN has been sent to your email."}
 

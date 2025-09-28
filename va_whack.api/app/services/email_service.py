@@ -178,7 +178,7 @@ def build_common_email_template(player_name: str, content_html: str) -> str:
 
 
 # Sends a verification PIN email
-def send_verification_pin(recipient_email: str, pin: str):
+def send_verification_pin(user_name: str, recipient_email: str, pin: str):
     pin_html = f"""
         <h3>🔐 Verification Code</h3>
         <p>Thank you for registering for the Vision Testing App.</p>
@@ -187,7 +187,7 @@ def send_verification_pin(recipient_email: str, pin: str):
         <p>This PIN will expire in <strong>{settings.PIN_EXPIRATION_MINUTES} minutes</strong>.</p>
         <p>If you did not request this, please ignore this email.</p>
     """
-    html_content = build_common_email_template("User", pin_html)
+    html_content = build_common_email_template(user_name, pin_html)
     return send_email(recipient_email, "Vision Testing App Verification Code", html_content)
 
 
