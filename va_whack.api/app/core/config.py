@@ -35,6 +35,12 @@ class Settings:
     OPENAI_TEMPERATURE: float = float(os.getenv("OPENAI_TEMPERATURE", 0.6))
     OPENAI_MAX_TOKENS: int = int(os.getenv("OPENAI_MAX_TOKENS", 10000))
 
+        # Gmail API
+    GMAIL_API_CLIENT_ID: str = os.getenv("GMAIL_API_CLIENT_ID")
+    GMAIL_API_CLIENT_SECRET: str = os.getenv("GMAIL_API_CLIENT_SECRET")
+    GMAIL_API_REFRESH_TOKEN: str = os.getenv("GMAIL_API_REFRESH_TOKEN")
+    GMAIL_API_USER: str = os.getenv("GMAIL_API_USER")  # usually your Gmail address
+
     # JWT Security
     SECRET_KEY: str = os.getenv("SECRET_KEY")
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")

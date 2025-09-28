@@ -4,15 +4,68 @@
 # va_whack.api\app\services\email_service.py
 # ==============================================================================
 
+import base64
 import datetime
 import smtplib
+import traceback
 from email.mime.text import MIMEText
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from app.core.security import settings
+
 from typing import Optional, List
 
 from app.models.models import EngagementGame, VAScaleGame
 from ..core.config import settings
 
+SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
+# Cache Gmail service (reuse across calls)
+_gmail_service = None
 
+
+def get_gmail_service():
+    """Authenticate with Gmail API using refresh token from settings."""
+    global _gmail_service
+    if _gmail_service:
+        return _gmail_service
+
+    creds = Credentials(
+        None,
+        refresh_token=settings.GMAIL_API_REFRESH_TOKEN,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=settings.GMAIL_API_CLIENT_ID,
+        client_secret=settings.GMAIL_API_CLIENT_SECRET,
+        scopes=SCOPES,
+    )
+    creds.refresh(Request())  # ensures we always get a fresh access token
+    _gmail_service = build("gmail", "v1", credentials=creds)
+    return _gmail_service
+
+
+def send_via_gmail_api(to_email: str, subject: str, html_content: str) -> bool:
+    """Send email via Gmail API (preferred)."""
+    try:
+        service = get_gmail_service()
+        message = MIMEText(html_content, "html")
+        message["to"] = to_email
+        message["subject"] = subject
+        message["from"] = settings.GMAIL_API_USER
+
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+        send_result = (
+            service.users()
+            .messages()
+            .send(userId="me", body={"raw": raw_message})
+            .execute()
+        )
+        print(f"✅ Message sent successfully: {send_result['id']}")
+        return True
+    except Exception as e:
+        print(f"❌ Gmail API failed: {e}")
+        traceback.print_exc()
+        return False
+    
 def _send_via_gmail_smtp(to_email: str, subject: str, html_content: str) -> bool:
     """
     Send email using Gmail's free SMTP servers.
@@ -37,8 +90,8 @@ def _send_via_gmail_smtp(to_email: str, subject: str, html_content: str) -> bool
 
 
 def send_email(to_email: str, subject: str, html_content: str, player_name: Optional[str] = "User") -> bool:
-    """Main send function – always uses Gmail SMTP now."""
-    return _send_via_gmail_smtp(to_email, subject, html_content)
+    """Main send function – always uses Gmail API now."""
+    return send_via_gmail_api(to_email, subject, html_content)
 
 
 def build_common_email_template(player_name: str, content_html: str) -> str:
