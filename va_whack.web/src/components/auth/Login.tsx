@@ -281,27 +281,21 @@ export const Login = () => {
 </div>
 </div>
  
-            {/* Watch Intro button */}
-<div className="absolute bottom-16 w-full flex justify-center z-10">
+{/* Watch Intro button */}
+<div className="mt-6 flex justify-center z-10">
 <button
-
-                    className="bg-purple-600 text-white px-6 py-2 rounded-md font-semibold shadow-md hover:bg-purple-700 transition"
-
-                    onClick={() => {
-
-                        window.open('https://youtu.be/SIWtH6WDPoQ', '_blank');
-
-                    }}
+    className="bg-purple-600 text-white px-6 py-2 rounded-md font-semibold shadow-md hover:bg-purple-700 transition"
+    onClick={() => {
+      window.open('https://youtu.be/SIWtH6WDPoQ', '_blank');
+    }}
 >
-
-                    Watch Intro
+    Watch Intro
 </button>
 </div>
  
-            {/* Version Info */}
-<div className='absolute bottom-4 right-6 text-sm font-semibold text-white bg-blue-700 px-3 py-1 rounded-full shadow-md z-10'>
-
-                V:3.0.1
+{/* Version Info */}
+<div className="absolute bottom-4 right-6 text-sm font-semibold text-white bg-blue-700 px-3 py-1 rounded-full shadow-md z-10">
+  V:3.0.1
 </div>
 </div>
 
